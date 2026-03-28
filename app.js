@@ -1051,7 +1051,33 @@ player.addListener({
       beatFlash.className = '';
       void beatFlash.offsetWidth;
       beatFlash.className = currentLevel === 4 ? 'flash-l4' : currentLevel === 3 ? 'flash-l3' : currentLevel === 2 ? 'flash-l2' : 'flash-l1';
-      if (currentLevel === 1) { l1Miku.classList.add('beat'); setTimeout(() => l1Miku.classList.remove('beat'), 200); }
+      if (currentLevel === 1) {
+        l1Miku.classList.add('beat');
+        setTimeout(() => l1Miku.classList.remove('beat'), 200);
+      }
+      if (currentLevel === 2) {
+        // Vibrant beat: flash background, pulse arrow, spawn particles
+        document.body.classList.add('beat-pulse');
+        setTimeout(() => document.body.classList.remove('beat-pulse'), 180);
+        arrowTarget.classList.add('beat-flash-arrow');
+        setTimeout(() => arrowTarget.classList.remove('beat-flash-arrow'), 180);
+        for (let i = 0; i < 4; i++) spawnParticleAt(
+          Math.random() * window.innerWidth,
+          Math.random() * window.innerHeight, true
+        );
+      }
+      if (currentLevel === 3) {
+        // Vibrant beat: flash background, make fairy pulse, spawn particles
+        document.body.classList.add('beat-pulse');
+        setTimeout(() => document.body.classList.remove('beat-pulse'), 180);
+        if (fairy.alive) {
+          flappyCtx && drawFlappy();
+        }
+        for (let i = 0; i < 5; i++) spawnParticleAt(
+          Math.random() * window.innerWidth,
+          Math.random() * window.innerHeight, true
+        );
+      }
     }
   },
 
@@ -1130,12 +1156,12 @@ function goToEndScreen() {
   pacPaused = true;
   cancelAnimationFrame(pacRaf);
 
-  // Calculate final total score
-  const totalScore = score + score2 + leeksDodged * 50 + score4;
+  // Calculate final total score -- capture all values NOW before timeout
+  const finalTotal = score + score2 + leeksDodged * 50 + score4;
 
   // Transition screen
   transitionText.textContent = '🎉 You did it! 🎉';
-  transitionSub.textContent  = `Final Score: ${totalScore.toLocaleString()}`;
+  transitionSub.textContent  = `Final Score: ${finalTotal.toLocaleString()}`;
   levelTransition.classList.remove('hidden');
 
   setTimeout(() => {
@@ -1143,19 +1169,19 @@ function goToEndScreen() {
     level4Screen.classList.add('hidden');
     document.body.classList.remove('level4');
 
-    // Show end screen -- reuse intro style
+    // Show end screen
     document.body.classList.add('end');
     endScreen.classList.remove('hidden');
 
-    // Start falling notes again
+    // Show final score immediately with captured value
+    endScoreEl.textContent = finalTotal.toLocaleString();
+    endScoreEl.classList.toggle('negative', finalTotal < 0);
+
+    // Start falling notes
     endScreenActive = true;
     endSpawnInterval = setInterval(spawnEndNote, 700);
     setTimeout(spawnEndNote, 100);
     setTimeout(spawnEndNote, 350);
-
-    // Show final score on end screen
-    endScoreEl.textContent = totalScore.toLocaleString();
-    endScoreEl.classList.toggle('negative', totalScore < 0);
   }, 3000);
 }
 
