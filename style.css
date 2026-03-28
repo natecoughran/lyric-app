@@ -187,17 +187,19 @@ html, body { width:100%; height:100%; overflow:hidden; font-family:'Noto Sans JP
 .game-flag {
   position:absolute; cursor:pointer; pointer-events:all;
   user-select:none; animation:fallDown linear forwards;
-  font-size:2.8rem; line-height:1;
-  filter:drop-shadow(0 0 8px rgba(255,0,0,0.6));
+  width:52px; height:52px; object-fit:contain;
+  filter:drop-shadow(0 0 8px rgba(255,0,0,0.7));
   transition:transform 0.08s;
+  border-radius:4px;
+  box-shadow:0 0 0 3px rgba(255,0,0,0.5);
 }
 .game-flag:hover { transform:scale(1.3); }
 
 /* Big Miku — bottom right corner, partially cut off */
 #miku-corner {
   position:fixed;
-  bottom:-60px; right:-40px;
-  width:clamp(280px, 38vw, 480px);
+  bottom:-100px; right:-60px;
+  width:clamp(380px, 52vw, 680px);
   z-index:12; pointer-events:none;
   overflow:visible;
 }

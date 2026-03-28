@@ -165,11 +165,12 @@ function spawnGameMiku() {
 }
 
 function spawnGameFlag() {
-  const el     = document.createElement('div');
+  const el     = document.createElement('img');
   el.className = 'game-flag';
+  el.src       = 'union_jack.png';
+  el.alt       = 'Union Jack';
   const x      = 40 + Math.random() * (window.innerWidth - 120);
   const dur    = 3.2 + Math.random() * 2;
-  el.textContent = '🇬🇧';
   el.style.cssText = `left:${x}px;top:-80px;animation-duration:${dur}s`;
   el.addEventListener('click', (e) => catchFlag(el, e.clientX, e.clientY));
   el.addEventListener('touchstart', (e) => {
