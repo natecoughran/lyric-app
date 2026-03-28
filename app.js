@@ -3,23 +3,100 @@
 //   Lyric App — powered by TextAlive App API
 // ============================================
 
-const loadingEl   = document.getElementById('loading');
-const loadingText = document.getElementById('loading-text');
-const bgEl        = document.getElementById('bg');
-const beatRingEl  = document.getElementById('beat-ring');
-const charEl      = document.getElementById('lyric-char');
-const wordEl      = document.getElementById('lyric-word');
-const phraseEl    = document.getElementById('lyric-phrase');
-const btnPlay     = document.getElementById('btn-play');
-const btnStop     = document.getElementById('btn-stop');
-const seekFill    = document.getElementById('seek-fill');
-const timeDisplay = document.getElementById('time-display');
-const canvas      = document.getElementById('particles');
-const ctx         = canvas.getContext('2d');
+const loadingEl      = document.getElementById('loading');
+const loadingText    = document.getElementById('loading-text');
+const bgEl           = document.getElementById('bg');
+const beatRingEl     = document.getElementById('beat-ring');
+const charEl         = document.getElementById('lyric-char');
+const wordEl         = document.getElementById('lyric-word');
+const phraseEl       = document.getElementById('lyric-phrase');
+const translationEl  = document.getElementById('lyric-translation');
+const mikuEl         = document.getElementById('miku');
+const btnPlay        = document.getElementById('btn-play');
+const btnStop        = document.getElementById('btn-stop');
+const seekFill       = document.getElementById('seek-fill');
+const timeDisplay    = document.getElementById('time-display');
+const canvas         = document.getElementById('particles');
+const ctx            = canvas.getContext('2d');
 
 const beatFlash = document.createElement('div');
 beatFlash.id = 'beat-flash';
 document.body.appendChild(beatFlash);
+
+// ============================================
+//   LYRIC TRANSLATIONS
+//   Japanese phrase → English translation
+// ============================================
+
+const translations = {
+  // Verse 1
+  '照らし出して！': 'Light it up!',
+  'グリーンライツ': 'Green Lights',
+  '広がる未来を': 'Spreading toward the future',
+  'きっと': 'Surely',
+  'いつか': 'Someday',
+  'キミを照らすまで': 'Until I can light your way',
+  '改めて言うことでもないけど': "It goes without saying, but",
+  '今だからこそ': 'Right now, of all times',
+  '言わせて': 'Let me say it',
+  'あの日キミが見つけてくれること': 'That you would find me that day',
+  '何となく予感してたんだ': 'I had a feeling somehow',
+  '走り出した': 'I started running',
+  'キミにもっと': 'I want to give you more',
+  'チカラをあげたくて': 'The strength to keep going',
+  'ずっと': 'Always',
+  '前に': 'Forward',
+  'ココロ決めたんだ': "I've made up my mind",
+  // Chorus
+  '遥かな未来を': 'Toward the distant future',
+  '今までもいつまでも': 'Now and forever',
+  '隣に居たいのは': 'The reason I want to be by your side',
+  '輝いたキミの顔': 'Is to see your shining face',
+  '間近で見たいから！': 'Up close!',
+  // Verse 2
+  '言葉は時に無力で': 'Words can be powerless at times',
+  'なかなか': 'And yet',
+  'この世界は変わらないけど': "The world doesn't change easily",
+  'もしキミが持ってるその魔法で': 'But if that magic you hold',
+  '新しい世界を作れるとしたら？': 'Could create a brand new world?',
+  'なんてね': 'Just kidding',
+  '言ってみただけ': 'I only said it',
+  'そんなの': 'Something like that',
+  '本当は出来る訳無い': "Could never really happen... right?",
+  'ワケがないでしょ！': "There's no way!",
+  '「好き」をもっと': 'Believe in "I love this"',
+  '信じるのさ': 'More and more',
+  '何度転んでも': 'No matter how many times you fall',
+  'キミはキミの': "You're you",
+  'やり方でいいのだ！': 'And that is perfectly fine!',
+  // Verse 3
+  '立ち向かう未来を': 'Toward a future you can face',
+  '堪え切れない夜には': 'On nights you can barely endure',
+  '隣で泣いていいよ': 'You can cry right beside me',
+  '二人だけの秘密も': 'Our secret just between us',
+  '嬉しいんだよ': 'Makes me so happy',
+  // Bridge
+  '振り返ると遠く手を振ってくれるキミも': 'You waving to me from afar as I look back',
+  'この先のどこかで出会えるキミも': 'And a you I may meet somewhere ahead',
+  '誰にも真似できないあなたを抱きしめて': 'I embrace the you that no one else can imitate',
+  '虹色の輝き': 'The rainbow-colored brilliance',
+  // Clap section
+  'Clap to the Beat': 'Clap to the Beat',
+  'Full Speed': 'Full Speed',
+};
+
+function getTranslation(phrase) {
+  if (!phrase) return '';
+  // Try exact match first
+  if (translations[phrase.trim()]) return translations[phrase.trim()];
+  // Try partial match
+  for (const [jp, en] of Object.entries(translations)) {
+    if (phrase.includes(jp)) return en;
+  }
+  // If it's already English/Latin characters, show it as-is
+  if (/^[A-Za-z0-9\s!?,.'&♪♫]+$/.test(phrase.trim())) return phrase.trim();
+  return '';
+}
 
 // ============================================
 //   PARTICLES
@@ -90,9 +167,15 @@ function onBeat() {
   void beatRingEl.offsetWidth;
   beatRingEl.classList.add('pulse');
   setTimeout(() => beatRingEl.classList.remove('pulse'), 150);
+
   beatFlash.classList.remove('flash');
   void beatFlash.offsetWidth;
   beatFlash.classList.add('flash');
+
+  // Miku glows on beat
+  mikuEl.classList.add('beat');
+  setTimeout(() => mikuEl.classList.remove('beat'), 200);
+
   for (let i = 0; i < 8; i++) spawnParticle(true);
 }
 
@@ -114,8 +197,6 @@ const player = new Player({
 player.addListener({
 
   onAppReady(app) {
-    // If the TextAlive host provides a song, use it.
-    // If running standalone, load our song ourselves.
     if (!app.songUrl) {
       player.createFromSongUrl('https://piapro.jp/t/61Y2', {
         video: {
@@ -146,28 +227,22 @@ player.addListener({
 
     if (Math.random() < 0.3) spawnParticle(false);
 
-    const char = player.video.findChar(position);
-    if (char && char.text && char.text.trim()) {
-      charEl.textContent = char.text;
-      triggerAnimation(charEl, 'char-pop');
-    }
-
-    const word = player.video.findWord(position);
-    if (word && word.text) {
-      if (wordEl.textContent !== word.text) {
-        wordEl.textContent = word.text;
-        triggerAnimation(wordEl, 'word-slide');
-      }
-    }
-
+    // Current phrase + translation
     const phrase = player.video.findPhrase(position);
     if (phrase && phrase.text) {
       if (phraseEl.textContent !== phrase.text) {
         phraseEl.textContent = phrase.text;
         triggerAnimation(phraseEl, 'phrase-fade');
+
+        const translation = getTranslation(phrase.text);
+        translationEl.textContent = translation;
+        if (translation) {
+          triggerAnimation(translationEl, 'translation-fade');
+        }
       }
     }
 
+    // Beat detection
     const beat = player.findBeat(position);
     if (beat && beat.startTime !== undefined) {
       if (Math.abs(position - beat.startTime) < 30) onBeat();
@@ -188,9 +263,8 @@ player.addListener({
     bgEl.classList.remove('playing');
     btnPlay.textContent  = '▶ PLAY';
     seekFill.style.width = '0%';
-    charEl.textContent   = '';
-    wordEl.textContent   = '';
     phraseEl.textContent = '';
+    translationEl.textContent = '';
   },
 
   onError(err) {

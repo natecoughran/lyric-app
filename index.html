@@ -8,49 +8,147 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
-
-  <!-- TextAlive App API -->
   <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
   <script src="https://unpkg.com/textalive-app-api/dist/index.js"></script>
 </head>
 <body>
 
-  <!-- Animated background gradient -->
+  <div id="media"></div>
   <div id="bg"></div>
-
-  <!-- Particle canvas -->
   <canvas id="particles"></canvas>
-
-  <!-- Beat pulse ring -->
   <div id="beat-ring"></div>
 
-  <!-- TextAlive needs this element to mount its audio player -->
-  <div id="media"></div>
-
-  <!-- Main UI -->
   <div id="app">
 
-    <!-- Song info header -->
+    <!-- Header -->
     <div id="header">
       <div id="song-title">グリーンライツ・セレナーデ</div>
       <div id="song-artist">初音ミク / Omoi</div>
     </div>
 
-    <!-- Lyric display area -->
-    <div id="lyric-stage">
-      <div id="lyric-char"></div>
-      <div id="lyric-word"></div>
-      <div id="lyric-phrase"></div>
+    <!-- Main content: lyrics left, character right -->
+    <div id="main-content">
+
+      <!-- Lyric stage -->
+      <div id="lyric-stage">
+        <div id="lyric-char"></div>
+        <div id="lyric-word"></div>
+        <div id="lyric-phrase"></div>
+        <div id="lyric-translation"></div>
+      </div>
+
+      <!-- Miku character SVG -->
+      <div id="character-wrap">
+        <svg id="miku" viewBox="0 0 220 520" xmlns="http://www.w3.org/2000/svg">
+
+          <!-- Twin tails — back left -->
+          <path d="M70,100 C20,130 0,200 10,280 C20,330 40,360 50,380 C55,370 52,330 48,290 C44,240 55,190 75,155 Z"
+            fill="#26a69a" opacity="0.85"/>
+
+          <!-- Twin tails — back right -->
+          <path d="M150,100 C200,130 220,200 210,280 C200,330 180,360 170,380 C165,370 168,330 172,290 C176,240 165,190 145,155 Z"
+            fill="#26a69a" opacity="0.85"/>
+
+          <!-- Hair ties -->
+          <ellipse cx="72" cy="148" rx="10" ry="7" fill="#FF69B4"/>
+          <ellipse cx="148" cy="148" rx="10" ry="7" fill="#FF69B4"/>
+
+          <!-- Neck -->
+          <rect x="98" y="168" width="24" height="20" rx="4" fill="#ffe0cc"/>
+
+          <!-- Body / outfit -->
+          <path d="M60,188 C60,183 75,178 110,178 C145,178 160,183 160,188 L168,320 L52,320 Z"
+            fill="#39C5BB"/>
+
+          <!-- Outfit detail — collar -->
+          <path d="M95,178 L110,210 L125,178" fill="#ffffff" opacity="0.6"/>
+
+          <!-- Tie -->
+          <path d="M107,185 L110,220 L113,185" fill="#FF69B4"/>
+
+          <!-- Skirt -->
+          <path d="M52,300 L48,370 L172,370 L168,300 Z" fill="#26a69a"/>
+          <path d="M48,360 L44,390 L176,390 L172,360 Z" fill="#39C5BB"/>
+
+          <!-- Skirt trim -->
+          <path d="M44,388 L176,388" stroke="#ffffff" stroke-width="3" opacity="0.5"/>
+
+          <!-- Left arm -->
+          <path d="M62,188 C50,200 40,230 38,260 C42,262 52,264 56,262 C56,240 60,215 68,200 Z"
+            fill="#39C5BB"/>
+          <!-- Left hand -->
+          <ellipse cx="40" cy="268" rx="10" ry="8" fill="#ffe0cc"/>
+
+          <!-- Right arm — raised slightly -->
+          <path d="M158,188 C170,195 185,220 188,250 C184,253 174,255 170,252 C168,232 162,208 154,196 Z"
+            fill="#39C5BB"/>
+          <!-- Right hand -->
+          <ellipse cx="186" cy="258" rx="10" ry="8" fill="#ffe0cc"/>
+
+          <!-- Legs -->
+          <rect x="72" y="388" width="28" height="80" rx="6" fill="#ffe0cc"/>
+          <rect x="120" y="388" width="28" height="80" rx="6" fill="#ffe0cc"/>
+
+          <!-- Boots -->
+          <path d="M66,455 L66,490 C66,498 78,502 100,500 L100,455 Z" fill="#39C5BB"/>
+          <path d="M120,455 L120,500 C142,502 154,498 154,490 L154,455 Z" fill="#39C5BB"/>
+          <!-- Boot trim -->
+          <rect x="66" y="455" width="34" height="6" rx="2" fill="#ffffff" opacity="0.5"/>
+          <rect x="120" y="455" width="34" height="6" rx="2" fill="#ffffff" opacity="0.5"/>
+
+          <!-- Head -->
+          <ellipse cx="110" cy="108" rx="46" ry="50" fill="#ffe0cc"/>
+
+          <!-- Hair — main dark teal -->
+          <path d="M65,100 C64,70 68,50 80,38 C90,28 100,24 110,24 C120,24 130,28 140,38 C152,50 156,70 155,100 C148,88 138,82 110,80 C82,82 72,88 65,100 Z"
+            fill="#2d8c87"/>
+
+          <!-- Hair — front fringe -->
+          <path d="M68,95 C66,80 70,62 78,52 L85,75 Z" fill="#2d8c87"/>
+          <path d="M152,95 C154,80 150,62 142,52 L135,75 Z" fill="#2d8c87"/>
+          <path d="M82,50 C88,36 100,28 110,28 C120,28 132,36 138,50 C130,42 120,38 110,38 C100,38 90,42 82,50 Z"
+            fill="#1a6660"/>
+
+          <!-- Eyes -->
+          <ellipse cx="92" cy="112" rx="12" ry="13" fill="white"/>
+          <ellipse cx="128" cy="112" rx="12" ry="13" fill="white"/>
+          <ellipse cx="93" cy="113" rx="8" ry="9" fill="#39C5BB"/>
+          <ellipse cx="129" cy="113" rx="8" ry="9" fill="#39C5BB"/>
+          <ellipse cx="94" cy="113" rx="5" ry="6" fill="#1a4a47"/>
+          <ellipse cx="130" cy="113" rx="5" ry="6" fill="#1a4a47"/>
+          <!-- Eye shine -->
+          <ellipse cx="97" cy="110" rx="2.5" ry="2.5" fill="white"/>
+          <ellipse cx="133" cy="110" rx="2.5" ry="2.5" fill="white"/>
+
+          <!-- Eyebrows -->
+          <path d="M82,98 C86,95 96,94 100,96" stroke="#2d8c87" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path d="M120,96 C124,94 134,95 138,98" stroke="#2d8c87" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+          <!-- Nose & mouth -->
+          <ellipse cx="110" cy="128" rx="2" ry="1.5" fill="#e8b89a" opacity="0.6"/>
+          <path d="M103,138 C106,143 114,143 117,138" stroke="#e8937a" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+          <!-- Headset / microphone piece -->
+          <rect x="148" y="100" width="18" height="12" rx="4" fill="#555" opacity="0.8"/>
+          <circle cx="166" cy="106" r="5" fill="#39C5BB" opacity="0.9"/>
+          <rect x="154" y="95" width="4" height="10" rx="2" fill="#444"/>
+
+          <!-- Musical notes floating -->
+          <text x="175" y="80" font-size="18" fill="#FF69B4" opacity="0.7">♪</text>
+          <text x="185" y="55" font-size="13" fill="#39C5BB" opacity="0.6">♫</text>
+          <text x="30" y="70" font-size="15" fill="#39C5BB" opacity="0.5">♩</text>
+
+        </svg>
+      </div>
+
     </div>
 
-    <!-- Playback controls -->
+    <!-- Controls -->
     <div id="controls">
       <button id="btn-play" disabled>▶ PLAY</button>
       <button id="btn-stop" disabled>■ STOP</button>
       <div id="seek-container">
-        <div id="seek-bar">
-          <div id="seek-fill"></div>
-        </div>
+        <div id="seek-bar"><div id="seek-fill"></div></div>
         <div id="time-display">0:00 / 0:00</div>
       </div>
     </div>
