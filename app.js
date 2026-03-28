@@ -56,6 +56,7 @@ const flappyGameover = document.getElementById('flappy-gameover');
 const flappyFinalLeeks = document.getElementById('flappy-final-leeks');
 const btnFlappyRetry = document.getElementById('btn-flappy-retry');
 const score3El       = document.getElementById('score3');
+const score3TotalEl  = document.getElementById('score3-total');
 const btn3PlayPause  = document.getElementById('btn3-play-pause');
 const btn3Stop       = document.getElementById('btn3-stop');
 const seekFill3      = document.getElementById('seek-fill3');
@@ -284,6 +285,7 @@ function flappyLoop(now) {
       lk.scored = true;
       leeksDodged++;
       score3El.textContent = leeksDodged;
+      score3TotalEl.textContent = (score + score2 + leeksDodged * 50).toLocaleString();
       for (let i = 0; i < 5; i++) spawnParticleAt(fairy.x + 40, fairy.y, true);
     }
   }

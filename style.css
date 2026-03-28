@@ -385,7 +385,15 @@ body.level2 #bg{
 ══════════════════════════════════ */
 body.level3 #bg {
   background:linear-gradient(135deg,#fce4f0,#ede0ff,#ddf4ff,#fff0fa,#fce4f0)!important;
-  animation-duration:12s;
+  animation-duration:4s!important;
+  animation-name:l3BgPulse!important;
+}
+@keyframes l3BgPulse {
+  0%  { background-position:0% 50%; filter:brightness(1); }
+  25% { background-position:50% 0%; filter:brightness(1.12); }
+  50% { background-position:100% 50%; filter:brightness(0.92); }
+  75% { background-position:50% 100%; filter:brightness(1.1); }
+  100%{ background-position:0% 50%; filter:brightness(1); }
 }
 
 #level3-screen {
@@ -426,6 +434,9 @@ body.level3 #bg {
 #score3-wrap{text-align:right;}
 #score3-label{font-family:'Black Han Sans',sans-serif;font-size:0.6rem;letter-spacing:0.2em;color:rgba(180,100,255,0.7);}
 #score3{font-family:'Black Han Sans',sans-serif;font-size:clamp(1.2rem,3vw,1.8rem);color:#cc66ff;text-shadow:0 0 10px rgba(180,100,255,0.5);min-width:50px;text-align:right;}
+#score3-total-wrap{text-align:right;}
+#score3-total-label{font-family:'Black Han Sans',sans-serif;font-size:0.6rem;letter-spacing:0.2em;color:rgba(255,105,180,0.7);}
+#score3-total{font-family:'Black Han Sans',sans-serif;font-size:clamp(1.2rem,3vw,1.8rem);color:#FF69B4;text-shadow:0 0 10px rgba(255,105,180,0.5);min-width:70px;text-align:right;}
 
 /* Flappy canvas fills the screen */
 #flappy-canvas {
