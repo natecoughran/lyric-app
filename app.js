@@ -1,25 +1,26 @@
 // ============================================
 //   Green Lights Serenade / Hatsune Miku
-//   Lyric App — powered by TextAlive App API
 // ============================================
 
 // ── DOM refs ──
+const introBg        = document.getElementById('intro-bg');
+const levelBg        = document.getElementById('level-bg');
 const introScreen    = document.getElementById('intro-screen');
 const notesField     = document.getElementById('notes-field');
 const noteCountEl    = document.getElementById('note-count');
 const noteProgress   = document.getElementById('note-progress-fill');
 const introMiku      = document.getElementById('intro-miku');
-const winOverlay     = document.getElementById('win-overlay');
+const letsGoScreen   = document.getElementById('lets-go-screen');
+const btnLetsGoPlay  = document.getElementById('btn-lets-go-play');
 const level1Screen   = document.getElementById('level1-screen');
 const loadingEl      = document.getElementById('loading');
 const loadingText    = document.getElementById('loading-text');
 const seekFill       = document.getElementById('seek-fill');
 const timeDisplay    = document.getElementById('time-display');
 const scoreEl        = document.getElementById('score');
-const comboEl        = document.getElementById('combo');
-const comboWrap      = document.getElementById('combo-wrap');
-const gameNotesField = document.getElementById('game-notes-field');
 const level1Miku     = document.getElementById('level1-miku');
+const btnPlayPause   = document.getElementById('btn-play-pause');
+const btnStop        = document.getElementById('btn-stop');
 const quizQNum       = document.getElementById('quiz-q-num');
 const quizProgressFill = document.getElementById('quiz-progress-fill');
 const quizQuestion   = document.getElementById('quiz-question');
@@ -64,20 +65,18 @@ const QUIZ_QUESTIONS = [
 const QUIZ_CORRECT_BONUS = 200;
 const QUIZ_WRONG_PENALTY = -100;
 
-let currentQuestion  = 0;
-let quizBonusTotal   = 0;
-let quizAnswered     = false;
-let quizComplete     = false;
+let currentQuestion = 0;
+let quizBonusTotal  = 0;
+let quizAnswered    = false;
+let quizComplete    = false;
 
 function loadQuestion(index) {
   const q = QUIZ_QUESTIONS[index];
-  quizAnswered     = false;
-  currentQuestion  = index;
-
+  quizAnswered    = false;
+  currentQuestion = index;
   quizQNum.textContent = index + 1;
   quizProgressFill.style.width = (index / QUIZ_QUESTIONS.length * 100) + '%';
 
-  // Slide in question
   quizQuestion.style.opacity = '0';
   quizQuestion.style.transform = 'translateY(8px)';
   setTimeout(() => {
@@ -89,9 +88,8 @@ function loadQuestion(index) {
 
   quizFeedback.textContent = '';
   quizFeedback.className = '';
-
-  // Build answer buttons with stagger
   quizAnswers.innerHTML = '';
+
   q.answers.forEach((answer, i) => {
     const btn = document.createElement('button');
     btn.className = 'quiz-answer-btn';
@@ -117,7 +115,9 @@ function handleAnswer(selectedIndex, btn) {
   const allBtns = quizAnswers.querySelectorAll('.quiz-answer-btn');
   allBtns.forEach(b => b.classList.add('disabled'));
 
-  if (selectedIndex === q.correct) {
+  const isCorrect = selectedIndex === q.correct;
+
+  if (isCorrect) {
     btn.classList.remove('disabled');
     btn.classList.add('correct');
     quizBonusTotal += QUIZ_CORRECT_BONUS;
@@ -125,7 +125,7 @@ function handleAnswer(selectedIndex, btn) {
     quizFeedback.className = 'correct';
     level1Miku.classList.add('beat');
     setTimeout(() => level1Miku.classList.remove('beat'), 400);
-    for (let i = 0; i < 12; i++) spawnParticleAt(
+    for (let i = 0; i < 10; i++) spawnParticleAt(
       Math.random() * window.innerWidth,
       Math.random() * window.innerHeight, true
     );
@@ -143,17 +143,13 @@ function handleAnswer(selectedIndex, btn) {
     flash.addEventListener('animationend', () => flash.remove());
   }
 
-  // Update bonus display
-  quizBonusScore.textContent = quizBonusTotal > 0
-    ? `+${quizBonusTotal}` : quizBonusTotal.toString();
+  // Update bonus & score
+  quizBonusScore.textContent = quizBonusTotal >= 0 ? `+${quizBonusTotal}` : `${quizBonusTotal}`;
   quizBonusScore.style.color = quizBonusTotal >= 0 ? 'var(--l1-green)' : '#ff4444';
-
-  // Add bonus to score
-  addScore(selectedIndex === q.correct ? QUIZ_CORRECT_BONUS : QUIZ_WRONG_PENALTY);
+  addScore(isCorrect ? QUIZ_CORRECT_BONUS : QUIZ_WRONG_PENALTY);
 
   setTimeout(() => {
     if (currentQuestion < QUIZ_QUESTIONS.length - 1) {
-      // Fade out, load next
       quizAnswers.style.opacity = '0';
       quizQuestion.style.opacity = '0';
       quizFeedback.style.opacity = '0';
@@ -164,12 +160,11 @@ function handleAnswer(selectedIndex, btn) {
         loadQuestion(currentQuestion + 1);
       }, 350);
     } else {
-      // All done
       quizComplete = true;
       quizProgressFill.style.width = '100%';
-      quizFeedback.textContent = '';
-      quizAnswers.innerHTML = '';
       quizQuestion.textContent = '';
+      quizAnswers.innerHTML = '';
+      quizFeedback.textContent = '';
       quizDoneMsg.classList.remove('hidden');
     }
   }, 1800);
@@ -181,7 +176,7 @@ function handleAnswer(selectedIndex, btn) {
 
 const NOTES_NEEDED = 5;
 const NOTE_SYMBOLS = ['♪','♫','♩','♬','🎵','🎶'];
-const NOTE_COLORS  = ['#00ff88','#FF69B4','#00FFFF','#FFB7DD','#88FF44','#FFDD00'];
+const NOTE_COLORS  = ['#39C5BB','#FF69B4','#00FFFF','#FFB7DD','#88FF44','#FFDD00'];
 let caughtNotes   = 0;
 let spawnInterval = null;
 let introActive   = true;
@@ -225,28 +220,31 @@ function winIntro() {
   clearInterval(spawnInterval);
   notesField.querySelectorAll('.falling-note').forEach(n => n.remove());
   introMiku.classList.add('celebrate');
-  winOverlay.classList.add('show');
-  for (let i = 0; i < 30; i++) {
-    setTimeout(() => spawnParticleAt(
-      Math.random() * window.innerWidth,
-      Math.random() * window.innerHeight, true
-    ), i * 60);
-  }
-  // After "Let's Go!" -- go straight to level 1 and auto-play
-  setTimeout(() => {
-    introScreen.classList.add('hidden');
-    level1Screen.classList.remove('hidden');
-    loadQuestion(0);
-    // Auto-play as soon as the player is ready
-    if (player.isReady) {
-      player.requestPlay();
-    } else {
-      autoPlayWhenReady = true;
-    }
-  }, 2000);
+  // Show Let's Go screen
+  letsGoScreen.classList.remove('hidden');
 }
 
-let autoPlayWhenReady = false;
+// ── Let's Go Play button ──
+btnLetsGoPlay.addEventListener('click', () => {
+  // Swap backgrounds
+  introBg.classList.add('hidden');
+  levelBg.classList.remove('hidden');
+  // Hide Let's Go, show Level 1
+  letsGoScreen.classList.add('hidden');
+  introScreen.classList.add('hidden');
+  level1Screen.classList.remove('hidden');
+  // Load quiz
+  loadQuestion(0);
+  // Start music
+  if (playerReady) {
+    player.requestPlay();
+  } else {
+    playWhenReady = true;
+  }
+});
+
+let playerReady  = false;
+let playWhenReady = false;
 
 spawnInterval = setInterval(spawnIntroNote, 900);
 setTimeout(spawnIntroNote, 100);
@@ -254,150 +252,15 @@ setTimeout(spawnIntroNote, 400);
 setTimeout(spawnIntroNote, 700);
 
 // ══════════════════════════════════
-//   IN-GAME SCORING
+//   SCORE
 // ══════════════════════════════════
 
-let score        = 0;
-let combo        = 0;
-let comboTimeout = null;
-let gameInterval = null;
-let gameRunning  = false;
-
-function spawnGameItem() {
-  if (!gameRunning) return;
-  const rand = Math.random();
-  if (rand < 0.65)      spawnGameNote();
-  else if (rand < 0.83) spawnGameMiku();
-  else                  spawnGameFlag();
-}
-
-function spawnGameNote() {
-  const el     = document.createElement('div');
-  el.className = 'game-note';
-  const symbol = NOTE_SYMBOLS[Math.floor(Math.random() * NOTE_SYMBOLS.length)];
-  const color  = NOTE_COLORS[Math.floor(Math.random() * NOTE_COLORS.length)];
-  const x      = 40 + Math.random() * (window.innerWidth - 120);
-  const dur    = 3 + Math.random() * 2;
-  const size   = 2.2 + Math.random() * 1.2;
-  el.textContent = symbol;
-  el.style.cssText = `left:${x}px;top:-80px;color:${color};font-size:${size}rem;animation-duration:${dur}s;text-shadow:0 0 14px ${color}`;
-  el.addEventListener('click', (e) => catchGameNote(el, e.clientX, e.clientY, symbol, color));
-  el.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    catchGameNote(el, e.touches[0].clientX, e.touches[0].clientY, symbol, color);
-  }, { passive: false });
-  gameNotesField.appendChild(el);
-  el.addEventListener('animationend', () => {
-    if (!el.dataset.caught) { if (combo > 0) { combo = 0; updateCombo(); } }
-    el.remove();
-  });
-}
-
-function spawnGameMiku() {
-  const el = document.createElement('img');
-  el.className = 'game-miku';
-  el.src = 'miku_image.png'; el.alt = 'Miku bonus!';
-  const x = 40 + Math.random() * (window.innerWidth - 130);
-  const dur = 3.5 + Math.random() * 2;
-  el.style.cssText = `left:${x}px;top:-80px;animation-duration:${dur}s`;
-  el.addEventListener('click', (e) => catchMikuBonus(el, e.clientX, e.clientY));
-  el.addEventListener('touchstart', (e) => {
-    e.preventDefault(); catchMikuBonus(el, e.touches[0].clientX, e.touches[0].clientY);
-  }, { passive: false });
-  gameNotesField.appendChild(el);
-  el.addEventListener('animationend', () => el.remove());
-}
-
-function spawnGameFlag() {
-  const el = document.createElement('img');
-  el.className = 'game-flag';
-  el.src = 'union_jack.png'; el.alt = 'Union Jack';
-  const x = 40 + Math.random() * (window.innerWidth - 120);
-  const dur = 3.2 + Math.random() * 2;
-  el.style.cssText = `left:${x}px;top:-80px;animation-duration:${dur}s`;
-  el.addEventListener('click', (e) => catchFlag(el, e.clientX, e.clientY));
-  el.addEventListener('touchstart', (e) => {
-    e.preventDefault(); catchFlag(el, e.touches[0].clientX, e.touches[0].clientY);
-  }, { passive: false });
-  gameNotesField.appendChild(el);
-  el.addEventListener('animationend', () => el.remove());
-}
-
-function catchGameNote(el, x, y, symbol, color) {
-  if (el.dataset.caught) return;
-  el.dataset.caught = 'true'; el.remove();
-  combo++;
-  const points = 10 * Math.min(combo, 8);
-  addScore(points);
-  updateCombo();
-  showPointsPopup(x, y, `+${points}`, color, combo >= 3);
-  popEffect(x, y, symbol, color);
-  for (let i = 0; i < 4; i++) spawnParticleAt(x, y, true);
-  level1Miku.classList.add('beat');
-  setTimeout(() => level1Miku.classList.remove('beat'), 200);
-  clearTimeout(comboTimeout);
-  comboTimeout = setTimeout(() => { combo = 0; updateCombo(); }, 2500);
-}
-
-function catchMikuBonus(el, x, y) {
-  if (el.dataset.caught) return;
-  el.dataset.caught = 'true'; el.remove();
-  addScore(500); combo++;
-  updateCombo();
-  showPointsPopup(x, y, '+500 ★ MIKU BONUS!', '#00ff88', false, true);
-  for (let i = 0; i < 12; i++) spawnParticleAt(x, y, true);
-  level1Miku.classList.add('beat');
-  setTimeout(() => level1Miku.classList.remove('beat'), 300);
-  clearTimeout(comboTimeout);
-  comboTimeout = setTimeout(() => { combo = 0; updateCombo(); }, 2500);
-}
-
-function catchFlag(el, x, y) {
-  if (el.dataset.caught) return;
-  el.dataset.caught = 'true'; el.remove();
-  addScore(-500); combo = 0; updateCombo();
-  showPointsPopup(x, y, '-500 OOPS!', '#ff4444', false, false, true);
-  const flash = document.createElement('div');
-  flash.className = 'penalty-flash';
-  document.body.appendChild(flash);
-  flash.addEventListener('animationend', () => flash.remove());
-}
+let score = 0;
 
 function addScore(amount) {
   score += amount;
   scoreEl.textContent = score.toLocaleString();
   scoreEl.classList.toggle('negative', score < 0);
-}
-
-function updateCombo() {
-  if (combo >= 2) {
-    comboWrap.className = 'show' + (combo >= 5 ? ' hot' : combo >= 3 ? ' warm' : '');
-    comboEl.textContent = combo;
-  } else {
-    comboWrap.className = '';
-  }
-}
-
-function showPointsPopup(x, y, text, color, big=false, bonus=false) {
-  const el = document.createElement('div');
-  el.className = 'points-popup' + (bonus ? ' bonus' : big ? ' big' : '');
-  el.textContent = text;
-  el.style.cssText = `left:${Math.min(x-20, window.innerWidth-240)}px;top:${y-10}px;color:${color};text-shadow:0 0 10px ${color}`;
-  document.body.appendChild(el);
-  el.addEventListener('animationend', () => el.remove());
-}
-
-function startGameNotes() {
-  if (gameRunning) return;
-  gameRunning = true;
-  gameInterval = setInterval(spawnGameItem, 1100);
-}
-
-function stopGameNotes() {
-  gameRunning = false;
-  clearInterval(gameInterval);
-  gameNotesField.querySelectorAll('.game-note,.game-miku,.game-flag').forEach(n => n.remove());
-  combo = 0; updateCombo();
 }
 
 // ══════════════════════════════════
@@ -410,7 +273,7 @@ resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
 function spawnParticleAt(x, y, energized) {
-  const colors = ['#00ff88','#FF69B4','#00FFFF','#ffffff','#aaffcc'];
+  const colors = ['#39C5BB','#FF69B4','#00FFFF','#00ff88','#ffffff'];
   for (let i = 0; i < (energized ? 3 : 1); i++) {
     particles.push({
       x, y,
@@ -469,12 +332,12 @@ player.addListener({
   },
 
   onVideoReady() {
+    playerReady = true;
     loadingText.textContent = 'Ready!';
     setTimeout(() => loadingEl.classList.add('hidden'), 500);
-    // If intro already finished, auto-play now
-    if (autoPlayWhenReady) {
-      setTimeout(() => player.requestPlay(), 300);
-      autoPlayWhenReady = false;
+    if (playWhenReady) {
+      setTimeout(() => player.requestPlay(), 200);
+      playWhenReady = false;
     }
   },
 
@@ -491,10 +354,11 @@ player.addListener({
     }
   },
 
-  onPlay()  { startGameNotes(); },
-  onPause() { stopGameNotes(); },
+  onPlay()  { btnPlayPause.textContent = '⏸ PAUSE'; },
+  onPause() { btnPlayPause.textContent = '▶ PLAY'; },
+
   onStop()  {
-    stopGameNotes();
+    btnPlayPause.textContent = '▶ PLAY';
     seekFill.style.width = '0%';
     if (score !== 0) {
       const final = document.createElement('div');
@@ -502,22 +366,26 @@ player.addListener({
       final.innerHTML = `
         <div class="final-score-title">🎉 Final Score</div>
         <div class="final-score-number ${score >= 0 ? 'positive' : 'negative'}">${score.toLocaleString()}</div>
-        <div class="final-score-sub">${score >= 0 ? 'Amazing! Play again to beat it!' : "Avoid the flags next time! 🇬🇧"}</div>`;
+        <div class="final-score-sub">${score >= 0 ? 'Amazing! Play again to beat it!' : 'Better luck next time!'}</div>`;
       document.body.appendChild(final);
       setTimeout(() => final.classList.add('show'), 50);
-      setTimeout(() => {
-        final.classList.remove('show');
-        setTimeout(() => final.remove(), 600);
-      }, 4500);
-      score = 0; combo = 0; updateCombo();
-      scoreEl.textContent = '0'; scoreEl.classList.remove('negative');
+      setTimeout(() => { final.classList.remove('show'); setTimeout(() => final.remove(), 600); }, 4500);
+      score = 0; scoreEl.textContent = '0'; scoreEl.classList.remove('negative');
     }
   },
+
   onError(err) {
     console.error('TextAlive error:', err);
     loadingText.textContent = 'Error loading. Check console (F12).';
   },
 });
+
+btnPlayPause.addEventListener('click', () => {
+  if (player.isPlaying) player.requestPause();
+  else player.requestPlay();
+});
+
+btnStop.addEventListener('click', () => player.requestStop());
 
 function formatTime(ms) {
   if (!ms || ms < 0) return '0:00';

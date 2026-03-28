@@ -14,8 +14,13 @@
 <body>
 
   <div id="media"></div>
-  <div id="bg"></div>
   <canvas id="particles"></canvas>
+
+  <!-- ══ INTRO BG (bright teal/pink gradient) ══ -->
+  <div id="intro-bg"></div>
+
+  <!-- ══ LEVEL BG (dark green/black/pink) ══ -->
+  <div id="level-bg" class="hidden"></div>
 
   <!-- ══ INTRO SCREEN ══ -->
   <div id="intro-screen">
@@ -32,36 +37,35 @@
       <img id="intro-miku" src="miku_image.png" alt="Miku"/>
     </div>
     <div id="notes-field"></div>
-    <div id="win-overlay">
-      <div id="win-text">🎉 Let's Go! 🎉</div>
-      <div id="win-sub">Level 1 is starting...</div>
-    </div>
+  </div>
+
+  <!-- ══ LET'S GO SCREEN ══ -->
+  <div id="lets-go-screen" class="hidden">
+    <div id="lets-go-text">🎉 Let's Go! 🎉</div>
+    <div id="lets-go-sub">Ready for Level 1?</div>
+    <button id="btn-lets-go-play">▶ Start Playing!</button>
   </div>
 
   <!-- ══ LEVEL 1 SCREEN ══ -->
   <div id="level1-screen" class="hidden">
 
-    <!-- Score HUD -->
+    <!-- HUD -->
     <div id="hud">
+      <div id="level-badge">LEVEL 1</div>
+      <div id="hud-controls">
+        <button id="btn-play-pause">⏸ PAUSE</button>
+        <button id="btn-stop">■ STOP</button>
+      </div>
       <div id="score-wrap">
         <div id="score-label">SCORE</div>
         <div id="score">0</div>
       </div>
-      <div id="combo-wrap">
-        <div id="combo-label">COMBO</div>
-        <div id="combo">0</div>
-        <div id="combo-x">x</div>
-      </div>
-      <div id="level-badge">LEVEL 1</div>
     </div>
 
-    <!-- Falling game items -->
-    <div id="game-notes-field"></div>
-
-    <!-- Two column layout: quiz left, Miku right -->
+    <!-- Two column: quiz left, Miku right -->
     <div id="level1-main">
 
-      <!-- LEFT: Quiz panel -->
+      <!-- LEFT: Quiz -->
       <div id="quiz-panel">
         <div id="quiz-header-text">⭐ Miku Quiz ⭐</div>
         <div id="quiz-progress-wrap">
@@ -75,9 +79,8 @@
           <span id="quiz-bonus-label">QUIZ BONUS:</span>
           <span id="quiz-bonus-score">0</span>
         </div>
-        <!-- shown after all questions done -->
         <div id="quiz-done-msg" class="hidden">
-          🎉 Quiz complete! Keep catching notes!
+          🎉 Quiz complete! Great job!
         </div>
       </div>
 
@@ -88,12 +91,10 @@
 
     </div>
 
-    <!-- Controls bar at bottom -->
-    <div id="controls">
-      <div id="seek-container">
-        <div id="seek-bar"><div id="seek-fill"></div></div>
-        <div id="time-display">0:00 / 0:00</div>
-      </div>
+    <!-- Seek bar at bottom -->
+    <div id="controls-bar">
+      <div id="seek-bar"><div id="seek-fill"></div></div>
+      <div id="time-display">0:00 / 0:00</div>
     </div>
 
     <!-- Loading overlay -->
