@@ -623,3 +623,72 @@ body.level4 #bg {
 
 #beat-flash.flash-l4{animation:beatFlashL4 0.25s ease-out forwards;}
 @keyframes beatFlashL4{0%{background:radial-gradient(ellipse at center,rgba(57,197,187,0.1) 0%,transparent 70%);opacity:1}100%{opacity:0}}
+
+/* ══════════════════════════════════
+   END SCREEN
+══════════════════════════════════ */
+body.end #bg {
+  background:linear-gradient(135deg,#b2f0ed,#d4f5f3,#ffd6eb,#ffe8f5,#b2f0ed)!important;
+  animation-duration:10s!important;
+  animation-name:introBgShift!important;
+}
+
+#end-screen {
+  position:fixed;inset:0;z-index:20;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:space-between;
+  padding:40px 20px 30px;
+  transition:opacity 0.8s ease;
+}
+
+#end-header { text-align:center; z-index:5; }
+
+#end-title {
+  font-family:'Black Han Sans',sans-serif;
+  font-size:clamp(2rem,7vw,5rem);
+  color:var(--miku-teal);
+  text-shadow:0 0 20px rgba(57,197,187,0.7),0 2px 6px rgba(0,0,0,0.1);
+  letter-spacing:0.15em;
+  animation:introGlow 3s ease-in-out infinite alternate;
+}
+#end-artist {
+  font-size:clamp(0.7rem,2vw,1rem);color:rgba(57,197,187,0.7);
+  letter-spacing:0.3em;text-transform:uppercase;margin-top:6px;
+}
+#end-congrats {
+  font-family:'Black Han Sans',sans-serif;
+  font-size:clamp(1rem,3vw,2rem);
+  color:var(--miku-pink);margin-top:16px;letter-spacing:0.08em;
+  animation:bounce 2s ease-in-out infinite;
+}
+
+#end-score-wrap {
+  text-align:center;z-index:5;
+}
+#end-score-label {
+  font-family:'Black Han Sans',sans-serif;
+  font-size:0.8rem;letter-spacing:0.25em;color:rgba(57,197,187,0.7);
+}
+#end-score {
+  font-family:'Black Han Sans',sans-serif;
+  font-size:clamp(4rem,15vw,9rem);
+  color:var(--miku-teal);
+  text-shadow:0 0 40px rgba(57,197,187,0.8);
+  animation:winPulse 0.8s ease-in-out infinite alternate;
+  transition:color 0.3s;
+}
+#end-score.negative { color:#ff4444; text-shadow:0 0 40px rgba(255,68,68,0.8); }
+
+#end-miku-wrap {
+  position:absolute;bottom:40px;right:clamp(10px,4vw,60px);
+  width:clamp(280px,38vw,480px);z-index:4;pointer-events:none;
+}
+#end-miku {
+  width:100%;height:auto;
+  animation:introFloat 3s ease-in-out infinite;
+  filter:drop-shadow(0 8px 24px rgba(57,197,187,0.5));
+}
+
+#end-notes-field {
+  position:fixed;inset:0;z-index:3;pointer-events:none;
+}

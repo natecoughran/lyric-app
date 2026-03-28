@@ -71,6 +71,10 @@ const pac4Inst       = document.getElementById('pac-instruction');
 const pac4Gameover   = document.getElementById('pac-gameover');
 const pac4FinalScore = document.getElementById('pac-final-score');
 const btnPacRetry    = document.getElementById('btn-pac-retry');
+// End screen
+const endScreen      = document.getElementById('end-screen');
+const endScoreEl     = document.getElementById('end-score');
+const endNotesField  = document.getElementById('end-notes-field');
 const btn3PlayPause  = document.getElementById('btn3-play-pause');
 const btn3Stop       = document.getElementById('btn3-stop');
 const seekFill3      = document.getElementById('seek-fill3');
@@ -447,6 +451,7 @@ function roundRect(ctx, x, y, w, h, r) {
 // ══════════════════════════════════
 
 let l4Active      = false;
+let l4StartTime   = null;
 let pacRunning    = false;
 let pacPaused     = false;
 let pacRaf        = null;
@@ -459,7 +464,7 @@ const LEEK4_SPEED = 4.2;
 const mikuPacImg = new Image();
 mikuPacImg.src = 'miku_pac.png';
 
-let pac = { x:0, y:0, vy:0, w:72, h:72, targetY:0 };
+let pac = { x:0, y:0, vy:0, w:110, h:110, targetY:0 };
 let notes4  = [];
 let leeks4  = [];
 let lastNote4Time = 0;
@@ -527,7 +532,7 @@ function pacLoop(now) {
     notes4.push({
       x: W + 30,
       y: 60 + lane * laneH + laneH * 0.5,
-      r: 18,
+      r: 28,
       symbol: ['♪','♫','♩','♬'][Math.floor(Math.random()*4)],
       color: ['#39C5BB','#00FFFF','#FF69B4','#ffffff','#aaddff'][Math.floor(Math.random()*5)],
       eaten: false
@@ -612,7 +617,7 @@ function drawPac() {
   // Draw notes
   for (const n of notes4) {
     pacCtx.save();
-    pacCtx.font = `${n.r * 2}px serif`;
+    pacCtx.font = `bold ${n.r * 2}px serif`;
     pacCtx.fillStyle = n.color;
     pacCtx.shadowColor = n.color;
     pacCtx.shadowBlur = 12;
@@ -680,6 +685,7 @@ function goToLevel4() {
     currentLevel = 4;
     l4Active = true;
     l3Active = false;
+    l4StartTime = performance.now();
     cancelAnimationFrame(flappyRaf);
     resizePac();
     drawPac();
@@ -1035,6 +1041,11 @@ player.addListener({
       l3StartTime = null;
       goToLevel4();
     }
+    // Level 4 runs for 30 seconds then goes to end screen
+    if (currentLevel === 4 && l4StartTime && (performance.now() - l4StartTime) >= 30000) {
+      l4StartTime = null;
+      goToEndScreen();
+    }
     const beat = player.findBeat(position);
     if (beat && Math.abs(position - beat.startTime) < 30) {
       beatFlash.className = '';
@@ -1105,6 +1116,47 @@ function formatTime(ms) {
   if (!ms || ms < 0) return '0:00';
   const s = Math.floor(ms/1000);
   return `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
+}
+
+
+// ══════════════════════════════════
+//   END SCREEN
+// ══════════════════════════════════
+
+function goToEndScreen() {
+  if (currentLevel === 'end') return;
+  currentLevel = 'end';
+  l4Active = false;
+  pacPaused = true;
+  cancelAnimationFrame(pacRaf);
+
+  // Calculate final total score
+  const totalScore = score + score2 + leeksDodged * 50 + score4;
+
+  // Transition screen
+  transitionText.textContent = '🎉 You did it! 🎉';
+  transitionSub.textContent  = `Final Score: ${totalScore.toLocaleString()}`;
+  levelTransition.classList.remove('hidden');
+
+  setTimeout(() => {
+    levelTransition.classList.add('hidden');
+    level4Screen.classList.add('hidden');
+    document.body.classList.remove('level4');
+
+    // Show end screen -- reuse intro style
+    document.body.classList.add('end');
+    endScreen.classList.remove('hidden');
+
+    // Start falling notes again
+    endScreenActive = true;
+    endSpawnInterval = setInterval(spawnEndNote, 700);
+    setTimeout(spawnEndNote, 100);
+    setTimeout(spawnEndNote, 350);
+
+    // Show final score on end screen
+    endScoreEl.textContent = totalScore.toLocaleString();
+    endScoreEl.classList.toggle('negative', totalScore < 0);
+  }, 3000);
 }
 
 function loop() { updateParticles(); requestAnimationFrame(loop); }
