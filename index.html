@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>グリーンライツ・セレナーデ / 初音ミク</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- TextAlive App API -->
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script src="https://unpkg.com/textalive-app-api/dist/index.js"></script>
+</head>
+<body>
+
+  <!-- Animated background gradient -->
+  <div id="bg"></div>
+
+  <!-- Particle canvas -->
+  <canvas id="particles"></canvas>
+
+  <!-- Beat pulse ring -->
+  <div id="beat-ring"></div>
+
+  <!-- TextAlive needs this element to mount its audio player -->
+  <div id="media"></div>
+
+  <!-- Main UI -->
+  <div id="app">
+
+    <!-- Song info header -->
+    <div id="header">
+      <div id="song-title">グリーンライツ・セレナーデ</div>
+      <div id="song-artist">初音ミク / Omoi</div>
+    </div>
+
+    <!-- Lyric display area -->
+    <div id="lyric-stage">
+      <div id="lyric-char"></div>
+      <div id="lyric-word"></div>
+      <div id="lyric-phrase"></div>
+    </div>
+
+    <!-- Playback controls -->
+    <div id="controls">
+      <button id="btn-play" disabled>▶ PLAY</button>
+      <button id="btn-stop" disabled>■ STOP</button>
+      <div id="seek-container">
+        <div id="seek-bar">
+          <div id="seek-fill"></div>
+        </div>
+        <div id="time-display">0:00 / 0:00</div>
+      </div>
+    </div>
+
+    <!-- Loading overlay -->
+    <div id="loading">
+      <div id="loading-icon">⟳</div>
+      <div id="loading-text">Loading グリーンライツ・セレナーデ...</div>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
