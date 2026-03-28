@@ -188,6 +188,7 @@ let arrowWindow     = 600; // ms to hit the arrow
 let arrowTimerHandle = null;
 let arrowTimerAnimHandle = null;
 let l2Active        = false;
+let l2StartTime     = null;
 
 // ══════════════════════════════════
 //   LEVEL 3 — FLAPPY MIKU
@@ -201,7 +202,7 @@ let leeksDodged   = 0;
 const GRAVITY     = 0.45;
 const FLAP_FORCE  = -8.5;
 const LEEK_SPEED  = 3.2;
-const LEEK_GAP    = 190;
+const LEEK_GAP    = 238;
 const LEEK_INTERVAL = 1700; // ms between leeks
 let lastLeekTime  = 0;
 
@@ -459,6 +460,7 @@ function goToLevel2() {
     document.body.classList.add('level2');
     currentLevel = 2;
     l2Active = true;
+    l2StartTime = performance.now();
     arrowHint.textContent = 'Hit the arrow key!';
     // Trigger first arrow shortly
     setTimeout(showNextArrow, 800);
@@ -750,10 +752,10 @@ player.addListener({
     }
     if (Math.random() < 0.08) spawnParticle(false);
 
-    // Auto-transition: Level 2 → Level 3 halfway through song
-    if (currentLevel === 2 && player.data?.song?.length) {
-      const halfTime = player.data.song.length * 0.55;
-      if (position >= halfTime) goToLevel3();
+    // Level 2 runs for 30 seconds then transitions to Level 3
+    if (currentLevel === 2 && l2StartTime && (performance.now() - l2StartTime) >= 30000) {
+      l2StartTime = null;
+      goToLevel3();
     }
     const beat = player.findBeat(position);
     if (beat && Math.abs(position - beat.startTime) < 30) {
