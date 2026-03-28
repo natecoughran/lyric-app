@@ -871,6 +871,47 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
+
+// ══════════════════════════════════
+//   POP SOUND (Web Audio API)
+// ══════════════════════════════════
+
+let audioCtx = null;
+
+function getAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  return audioCtx;
+}
+
+function playPopSound(color) {
+  try {
+    const ctx  = getAudioCtx();
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    // Pick a fun pitch based on note color for variety
+    const pitches = [523, 587, 659, 784, 880, 1047];
+    const pitch   = pitches[Math.floor(Math.random() * pitches.length)];
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.type      = 'sine';
+    osc.frequency.setValueAtTime(pitch, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(pitch * 1.5, ctx.currentTime + 0.08);
+
+    gain.gain.setValueAtTime(0.18, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.18);
+  } catch(e) {
+    // Silently fail if audio not available
+  }
+}
+
 // ══════════════════════════════════
 //   INTRO NOTE CATCHING
 // ══════════════════════════════════
