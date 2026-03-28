@@ -47,7 +47,7 @@
     <div id="transition-sub"></div>
   </div>
 
-  <!-- ══ LEVEL 1 SCREEN ══ -->
+  <!-- ══ LEVEL 1 ══ -->
   <div id="level1-screen" class="hidden">
     <div id="hud">
       <div id="level-badge">LEVEL 1</div>
@@ -88,7 +88,7 @@
     </div>
   </div>
 
-  <!-- ══ LEVEL 2 SCREEN ══ -->
+  <!-- ══ LEVEL 2 ══ -->
   <div id="level2-screen" class="hidden">
     <div id="hud2">
       <div id="level2-badge">LEVEL 2</div>
@@ -101,10 +101,7 @@
         <div id="score2">0</div>
       </div>
     </div>
-
     <div id="level2-main">
-
-      <!-- LEFT: Boxing game -->
       <div id="boxing-panel">
         <div id="combo2-wrap" class="hidden">
           <div id="combo2-label">COMBO</div>
@@ -114,9 +111,7 @@
         <div id="arrow-display">
           <div id="arrow-hint">Get ready...</div>
           <div id="arrow-target"></div>
-          <div id="arrow-timer-bar-wrap">
-            <div id="arrow-timer-bar"></div>
-          </div>
+          <div id="arrow-timer-bar-wrap"><div id="arrow-timer-bar"></div></div>
         </div>
         <div id="rating-display"></div>
         <div id="keys-legend">
@@ -126,17 +121,48 @@
           <div class="key-hint"><span class="key">→</span></div>
         </div>
       </div>
-
-      <!-- RIGHT: Miku Jack -->
       <div id="level2-miku-wrap">
         <img id="level2-miku" src="miku_jack.png" alt="Miku Jack"/>
       </div>
-
     </div>
-
     <div id="controls-bar2">
       <div id="seek-bar2"><div id="seek-fill2"></div></div>
       <div id="time-display2">0:00 / 0:00</div>
+    </div>
+  </div>
+
+  <!-- ══ LEVEL 3 ══ -->
+  <div id="level3-screen" class="hidden">
+    <div id="hud3">
+      <div id="level3-badge">LEVEL 3</div>
+      <div id="hud3-controls">
+        <button id="btn3-play-pause">⏸ PAUSE</button>
+        <button id="btn3-stop">■ STOP</button>
+      </div>
+      <div id="score3-wrap">
+        <div id="score3-label">LEEKS DODGED</div>
+        <div id="score3">0</div>
+      </div>
+    </div>
+
+    <!-- Full screen canvas for flappy game -->
+    <canvas id="flappy-canvas"></canvas>
+
+    <!-- Spacebar instruction -->
+    <div id="flappy-instruction">
+      <div id="flappy-inst-text">Press SPACEBAR to fly!</div>
+    </div>
+
+    <!-- Game over overlay -->
+    <div id="flappy-gameover" class="hidden">
+      <div id="flappy-gameover-title">Oh no! 🧅</div>
+      <div id="flappy-gameover-score">You dodged <span id="flappy-final-leeks">0</span> leeks!</div>
+      <button id="btn-flappy-retry">Try Again!</button>
+    </div>
+
+    <div id="controls-bar3">
+      <div id="seek-bar3"><div id="seek-fill3"></div></div>
+      <div id="time-display3">0:00 / 0:00</div>
     </div>
   </div>
 

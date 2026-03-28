@@ -47,6 +47,19 @@ const arrowTimerBar  = document.getElementById('arrow-timer-bar');
 const ratingDisplay  = document.getElementById('rating-display');
 const canvas         = document.getElementById('particles');
 const ctx            = canvas.getContext('2d');
+// Level 3
+const level3Screen   = document.getElementById('level3-screen');
+const flappyCanvas   = document.getElementById('flappy-canvas');
+const flappyCtx      = flappyCanvas.getContext('2d');
+const flappyInst     = document.getElementById('flappy-instruction');
+const flappyGameover = document.getElementById('flappy-gameover');
+const flappyFinalLeeks = document.getElementById('flappy-final-leeks');
+const btnFlappyRetry = document.getElementById('btn-flappy-retry');
+const score3El       = document.getElementById('score3');
+const btn3PlayPause  = document.getElementById('btn3-play-pause');
+const btn3Stop       = document.getElementById('btn3-stop');
+const seekFill3      = document.getElementById('seek-fill3');
+const timeDisplay3   = document.getElementById('time-display3');
 
 const beatFlash = document.createElement('div');
 beatFlash.id = 'beat-flash';
@@ -155,6 +168,7 @@ function handleAnswer(selectedIndex, btn) {
       quizDoneMsg.classList.remove('hidden');
       // Transition to Level 2 after a short pause
       setTimeout(() => goToLevel2(), 2500);
+      // (Level 2 will transition to Level 3 after a set time)
     }
   }, 1800);
 }
@@ -174,6 +188,260 @@ let arrowWindow     = 600; // ms to hit the arrow
 let arrowTimerHandle = null;
 let arrowTimerAnimHandle = null;
 let l2Active        = false;
+
+// ══════════════════════════════════
+//   LEVEL 3 — FLAPPY MIKU
+// ══════════════════════════════════
+
+let l3Active      = false;
+let flappyRunning = false;
+let flappyPaused  = false;
+let flappyRaf     = null;
+let leeksDodged   = 0;
+const GRAVITY     = 0.45;
+const FLAP_FORCE  = -8.5;
+const LEEK_SPEED  = 3.2;
+const LEEK_GAP    = 190;
+const LEEK_INTERVAL = 1700; // ms between leeks
+let lastLeekTime  = 0;
+
+// Miku fairy image
+const mikuFairyImg = new Image();
+mikuFairyImg.src = 'miku_fairy.png';
+
+let fairy = { x:0, y:0, vy:0, w:70, h:70, alive:true };
+let leeks = [];
+
+function initFlappy() {
+  fairy.x  = flappyCanvas.width * 0.22;
+  fairy.y  = flappyCanvas.height * 0.45;
+  fairy.vy = 0;
+  fairy.alive = true;
+  leeks = [];
+  leeksDodged = 0;
+  lastLeekTime = 0;
+  score3El.textContent = '0';
+  flappyGameover.classList.add('hidden');
+  flappyInst.classList.remove('hidden');
+  flappyRunning = false;
+  flappyPaused  = false;
+}
+
+function resizeFlappy() {
+  flappyCanvas.width  = window.innerWidth;
+  flappyCanvas.height = window.innerHeight;
+  if (!flappyRunning) initFlappy();
+}
+
+function startFlappy() {
+  if (flappyRunning) return;
+  flappyRunning = true;
+  flappyInst.classList.add('hidden');
+  lastLeekTime = performance.now();
+  flappyLoop(performance.now());
+}
+
+function flapMiku() {
+  if (!l3Active) return;
+  if (!flappyRunning) { startFlappy(); }
+  if (flappyPaused || !fairy.alive) return;
+  fairy.vy = FLAP_FORCE;
+}
+
+function spawnLeek(now) {
+  const h   = flappyCanvas.height;
+  const minY = 80;
+  const maxY = h - LEEK_GAP - 80;
+  const gapY = minY + Math.random() * (maxY - minY);
+  leeks.push({ x: flappyCanvas.width + 40, gapY, scored: false });
+}
+
+function flappyLoop(now) {
+  if (!l3Active || flappyPaused) return;
+  flappyRaf = requestAnimationFrame(flappyLoop);
+
+  const W = flappyCanvas.width;
+  const H = flappyCanvas.height;
+
+  // Spawn leeks on interval
+  if (now - lastLeekTime > LEEK_INTERVAL) {
+    spawnLeek(now);
+    lastLeekTime = now;
+  }
+
+  // Physics
+  fairy.vy += GRAVITY;
+  fairy.y  += fairy.vy;
+
+  // Move leeks
+  for (const lk of leeks) lk.x -= LEEK_SPEED;
+  leeks = leeks.filter(lk => lk.x > -80);
+
+  // Score leeks passed
+  for (const lk of leeks) {
+    if (!lk.scored && lk.x + 40 < fairy.x) {
+      lk.scored = true;
+      leeksDodged++;
+      score3El.textContent = leeksDodged;
+      for (let i = 0; i < 5; i++) spawnParticleAt(fairy.x + 40, fairy.y, true);
+    }
+  }
+
+  // Collision: ceiling / floor
+  if (fairy.y < 0 || fairy.y + fairy.h > H - 42) {
+    killFairy(); return;
+  }
+
+  // Collision: leeks
+  const fw = fairy.w * 0.65, fh = fairy.h * 0.65;
+  const fx = fairy.x + fairy.w * 0.175, fy = fairy.y + fairy.h * 0.175;
+  const leekW = 52;
+  for (const lk of leeks) {
+    const inX = fx < lk.x + leekW && fx + fw > lk.x;
+    if (inX) {
+      const hitTop    = fy < lk.gapY;
+      const hitBottom = fy + fh > lk.gapY + LEEK_GAP;
+      if (hitTop || hitBottom) { killFairy(); return; }
+    }
+  }
+
+  drawFlappy();
+}
+
+function killFairy() {
+  fairy.alive = false;
+  flappyRunning = false;
+  cancelAnimationFrame(flappyRaf);
+  drawFlappy();
+  flappyFinalLeeks.textContent = leeksDodged;
+  setTimeout(() => flappyGameover.classList.remove('hidden'), 600);
+}
+
+function drawFlappy() {
+  const W = flappyCanvas.width;
+  const H = flappyCanvas.height;
+  flappyCtx.clearRect(0, 0, W, H);
+
+  // Soft pastel scrolling background layers
+  // Sky gradient bands
+  const skyColors = ['#fce4f0','#ede0ff','#ddf4ff'];
+  const bandH = H / skyColors.length;
+  skyColors.forEach((c, i) => {
+    flappyCtx.fillStyle = c;
+    flappyCtx.globalAlpha = 0.35;
+    flappyCtx.fillRect(0, i * bandH, W, bandH);
+  });
+  flappyCtx.globalAlpha = 1;
+
+  // Draw leeks
+  for (const lk of leeks) drawLeek(lk.x, lk.gapY);
+
+  // Draw fairy Miku
+  if (mikuFairyImg.complete) {
+    flappyCtx.save();
+    if (!fairy.alive) { flappyCtx.globalAlpha = 0.5; flappyCtx.rotate(0.4); }
+    // Tilt based on velocity
+    flappyCtx.save();
+    flappyCtx.translate(fairy.x + fairy.w/2, fairy.y + fairy.h/2);
+    const tilt = Math.max(-0.4, Math.min(0.5, fairy.vy * 0.045));
+    flappyCtx.rotate(tilt);
+    flappyCtx.drawImage(mikuFairyImg, -fairy.w/2, -fairy.h/2, fairy.w, fairy.h);
+    flappyCtx.restore();
+    if (!fairy.alive) flappyCtx.restore();
+  } else {
+    // Fallback circle if image not loaded
+    flappyCtx.fillStyle = '#FF69B4';
+    flappyCtx.beginPath();
+    flappyCtx.arc(fairy.x + fairy.w/2, fairy.y + fairy.h/2, 28, 0, Math.PI*2);
+    flappyCtx.fill();
+  }
+
+  // Floor line
+  flappyCtx.strokeStyle = 'rgba(180,100,255,0.2)';
+  flappyCtx.lineWidth = 2;
+  flappyCtx.beginPath();
+  flappyCtx.moveTo(0, H - 42); flappyCtx.lineTo(W, H - 42);
+  flappyCtx.stroke();
+}
+
+function drawLeek(x, gapY) {
+  const W = flappyCanvas.width;
+  const H = flappyCanvas.height;
+  const lw = 52; // leek width
+
+  flappyCtx.save();
+
+  // ── TOP LEEK (upside down, roots at top, leaves pointing down into gap) ──
+  // Stem
+  flappyCtx.fillStyle = '#e8e0c0';
+  flappyCtx.strokeStyle = '#c8b88a';
+  flappyCtx.lineWidth = 1.5;
+  roundRect(flappyCtx, x + 10, 0, 32, gapY - 30, 4);
+  flappyCtx.fill(); flappyCtx.stroke();
+  // Bulb at bottom of top leek
+  flappyCtx.fillStyle = '#f5f0e8';
+  flappyCtx.beginPath();
+  flappyCtx.ellipse(x + lw/2, gapY - 18, 18, 20, 0, 0, Math.PI*2);
+  flappyCtx.fill(); flappyCtx.stroke();
+  // Green leaves fanning down into gap
+  flappyCtx.strokeStyle = '#5a9a3a'; flappyCtx.lineWidth = 7; flappyCtx.lineCap = 'round';
+  flappyCtx.beginPath(); flappyCtx.moveTo(x+lw/2-6, gapY-10); flappyCtx.quadraticCurveTo(x+lw/2-18, gapY+10, x+lw/2-14, gapY+28); flappyCtx.stroke();
+  flappyCtx.strokeStyle = '#6ab04a'; flappyCtx.lineWidth = 6;
+  flappyCtx.beginPath(); flappyCtx.moveTo(x+lw/2+4, gapY-10); flappyCtx.quadraticCurveTo(x+lw/2+16, gapY+8, x+lw/2+12, gapY+26); flappyCtx.stroke();
+  flappyCtx.strokeStyle = '#7acc5a'; flappyCtx.lineWidth = 5;
+  flappyCtx.beginPath(); flappyCtx.moveTo(x+lw/2, gapY-10); flappyCtx.quadraticCurveTo(x+lw/2, gapY+14, x+lw/2-4, gapY+30); flappyCtx.stroke();
+
+  // ── BOTTOM LEEK (right way up, roots at bottom) ──
+  const bottomTop = gapY + LEEK_GAP;
+  // Green leaves at top
+  flappyCtx.strokeStyle = '#5a9a3a'; flappyCtx.lineWidth = 7; flappyCtx.lineCap = 'round';
+  flappyCtx.beginPath(); flappyCtx.moveTo(x+lw/2-6, bottomTop+10); flappyCtx.quadraticCurveTo(x+lw/2-20, bottomTop-20, x+lw/2-14, bottomTop-45); flappyCtx.stroke();
+  flappyCtx.strokeStyle = '#6ab04a'; flappyCtx.lineWidth = 6;
+  flappyCtx.beginPath(); flappyCtx.moveTo(x+lw/2+4, bottomTop+10); flappyCtx.quadraticCurveTo(x+lw/2+18, bottomTop-18, x+lw/2+12, bottomTop-42); flappyCtx.stroke();
+  flappyCtx.strokeStyle = '#7acc5a'; flappyCtx.lineWidth = 5;
+  flappyCtx.beginPath(); flappyCtx.moveTo(x+lw/2, bottomTop+10); flappyCtx.quadraticCurveTo(x+lw/2+2, bottomTop-22, x+lw/2-2, bottomTop-48); flappyCtx.stroke();
+  // Stem
+  flappyCtx.fillStyle = '#e8e0c0'; flappyCtx.strokeStyle = '#c8b88a'; flappyCtx.lineWidth = 1.5;
+  roundRect(flappyCtx, x+10, bottomTop+18, 32, H-bottomTop-60, 4);
+  flappyCtx.fill(); flappyCtx.stroke();
+  // Bulb at top of bottom leek
+  flappyCtx.fillStyle = '#f5f0e8';
+  flappyCtx.beginPath();
+  flappyCtx.ellipse(x+lw/2, bottomTop+20, 18, 20, 0, 0, Math.PI*2);
+  flappyCtx.fill(); flappyCtx.stroke();
+
+  flappyCtx.restore();
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y); ctx.arcTo(x+w, y, x+w, y+r, r);
+  ctx.lineTo(x+w, y+h-r); ctx.arcTo(x+w, y+h, x+w-r, y+h, r);
+  ctx.lineTo(x+r, y+h); ctx.arcTo(x, y+h, x, y+h-r, r);
+  ctx.lineTo(x, y+r); ctx.arcTo(x, y, x+r, y, r);
+  ctx.closePath();
+}
+
+function goToLevel3() {
+  transitionText.textContent = '🧅 Level 3 🧅';
+  transitionSub.textContent  = 'Flappy Miku! Dodge the leeks!';
+  levelTransition.classList.remove('hidden');
+  setTimeout(() => {
+    levelTransition.classList.add('hidden');
+    level2Screen.classList.add('hidden');
+    level3Screen.classList.remove('hidden');
+    document.body.classList.remove('level2');
+    document.body.classList.add('level3');
+    currentLevel = 3;
+    l3Active = true;
+    l2Active = false;
+    resizeFlappy();
+    drawFlappy();
+  }, 2800);
+}
+
+window.addEventListener('resize', () => { if (currentLevel === 3) resizeFlappy(); });
 const PERFECT_MS    = 100;
 const GOOD_MS       = 280;
 
@@ -306,6 +574,10 @@ document.addEventListener('keydown', (e) => {
   if (currentLevel === 2 && ARROW_KEYS[e.key]) {
     e.preventDefault();
     registerHit(e.key);
+  }
+  if (currentLevel === 3 && e.key === ' ') {
+    e.preventDefault();
+    flapMiku();
   }
 });
 
@@ -471,15 +743,23 @@ player.addListener({
       } else if (currentLevel === 2) {
         seekFill2.style.width = pct;
         timeDisplay2.textContent = formatTime(position) + ' / ' + formatTime(len);
+      } else if (currentLevel === 3) {
+        seekFill3.style.width = pct;
+        timeDisplay3.textContent = formatTime(position) + ' / ' + formatTime(len);
       }
     }
     if (Math.random() < 0.08) spawnParticle(false);
 
+    // Auto-transition: Level 2 → Level 3 halfway through song
+    if (currentLevel === 2 && player.data?.song?.length) {
+      const halfTime = player.data.song.length * 0.55;
+      if (position >= halfTime) goToLevel3();
+    }
     const beat = player.findBeat(position);
     if (beat && Math.abs(position - beat.startTime) < 30) {
       beatFlash.className = '';
       void beatFlash.offsetWidth;
-      beatFlash.className = currentLevel === 2 ? 'flash-l2' : 'flash-l1';
+      beatFlash.className = currentLevel === 3 ? 'flash-l3' : currentLevel === 2 ? 'flash-l2' : 'flash-l1';
       if (currentLevel === 1) { l1Miku.classList.add('beat'); setTimeout(() => l1Miku.classList.remove('beat'), 200); }
     }
   },
@@ -487,16 +767,19 @@ player.addListener({
   onPlay() {
     if (currentLevel === 1) btnPlayPause.textContent = '⏸ PAUSE';
     if (currentLevel === 2) btn2PlayPause.textContent = '⏸ PAUSE';
+    if (currentLevel === 3) btn3PlayPause.textContent = '⏸ PAUSE';
   },
   onPause() {
     if (currentLevel === 1) btnPlayPause.textContent = '▶ PLAY';
     if (currentLevel === 2) { btn2PlayPause.textContent = '▶ PLAY'; l2Active = false; }
+    if (currentLevel === 3) { btn3PlayPause.textContent = '▶ PLAY'; flappyPaused = true; cancelAnimationFrame(flappyRaf); }
   },
   onStop() {
     if (currentLevel === 1) btnPlayPause.textContent = '▶ PLAY';
     if (currentLevel === 2) { btn2PlayPause.textContent = '▶ PLAY'; l2Active = false; currentArrow = null; }
-    seekFill.style.width = '0%'; seekFill2.style.width = '0%';
-    const totalScore = score + score2;
+    if (currentLevel === 3) { btn3PlayPause.textContent = '▶ PLAY'; l3Active = false; flappyPaused = true; cancelAnimationFrame(flappyRaf); }
+    seekFill.style.width = '0%'; seekFill2.style.width = '0%'; seekFill3.style.width = '0%';
+    const totalScore = score + score2 + leeksDodged * 50;
     if (totalScore !== 0) {
       const final = document.createElement('div');
       final.id = 'final-score';
@@ -520,6 +803,13 @@ btn2PlayPause.addEventListener('click', () => {
   else { player.requestPlay(); l2Active = true; setTimeout(showNextArrow, 500); }
 });
 btn2Stop.addEventListener('click', () => player.requestStop());
+btn3PlayPause.addEventListener('click', () => {
+  if (player.isPlaying) { player.requestPause(); flappyPaused = true; cancelAnimationFrame(flappyRaf); }
+  else { player.requestPlay(); flappyPaused = false; if (flappyRunning && fairy.alive) flappyLoop(performance.now()); }
+});
+btn3Stop.addEventListener('click', () => player.requestStop());
+btnFlappyRetry.addEventListener('click', () => { initFlappy(); drawFlappy(); });
+flappyCanvas.addEventListener('click', () => flapMiku());
 
 function formatTime(ms) {
   if (!ms || ms < 0) return '0:00';

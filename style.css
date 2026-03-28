@@ -379,3 +379,120 @@ body.level2 #bg{
 .final-score-number.positive{color:var(--l2-blue);text-shadow:0 0 40px rgba(0,191,255,0.8);}
 .final-score-number.negative{color:#ff4444;text-shadow:0 0 40px rgba(255,68,68,0.8);}
 .final-score-sub{font-family:'Black Han Sans',sans-serif;font-size:clamp(0.9rem,2.5vw,1.4rem);color:var(--l2-purple);letter-spacing:0.1em;}
+
+/* ══════════════════════════════════
+   LEVEL 3 — PASTEL FLAPPY GAME
+══════════════════════════════════ */
+body.level3 #bg {
+  background:linear-gradient(135deg,#fce4f0,#ede0ff,#ddf4ff,#fff0fa,#fce4f0)!important;
+  animation-duration:12s;
+}
+
+#level3-screen {
+  position:fixed;inset:0;z-index:12;
+  display:flex;flex-direction:column;
+  transition:opacity 0.8s ease;
+}
+
+#hud3 {
+  position:fixed;top:0;left:0;right:0;z-index:30;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 20px;
+  background:rgba(255,255,255,0.65);backdrop-filter:blur(8px);
+  border-bottom:1px solid rgba(200,150,255,0.2);gap:12px;
+}
+#level3-badge {
+  font-family:'Black Han Sans',sans-serif;
+  font-size:clamp(0.9rem,2vw,1.2rem);letter-spacing:0.2em;
+  color:#cc66ff;border:2px solid rgba(180,100,255,0.4);
+  border-radius:20px;padding:4px 14px;
+  text-shadow:0 0 10px rgba(180,100,255,0.4);white-space:nowrap;
+}
+#hud3-controls{display:flex;gap:8px;}
+#btn3-play-pause {
+  font-family:'Black Han Sans',sans-serif;font-size:0.8rem;
+  letter-spacing:0.15em;padding:6px 16px;border-radius:20px;cursor:pointer;
+  border:2px solid #FF69B4;background:rgba(255,105,180,0.1);color:#FF69B4;
+  transition:background 0.2s,color 0.2s,box-shadow 0.2s;
+}
+#btn3-play-pause:hover{background:#FF69B4;color:#fff;box-shadow:0 0 16px rgba(255,105,180,0.6);}
+#btn3-stop {
+  font-family:'Black Han Sans',sans-serif;font-size:0.8rem;
+  letter-spacing:0.15em;padding:6px 16px;border-radius:20px;cursor:pointer;
+  border:2px solid rgba(150,100,255,0.5);background:rgba(150,100,255,0.1);color:#9966ff;
+  transition:background 0.2s,color 0.2s;
+}
+#btn3-stop:hover{background:#9966ff;color:#fff;}
+#score3-wrap{text-align:right;}
+#score3-label{font-family:'Black Han Sans',sans-serif;font-size:0.6rem;letter-spacing:0.2em;color:rgba(180,100,255,0.7);}
+#score3{font-family:'Black Han Sans',sans-serif;font-size:clamp(1.2rem,3vw,1.8rem);color:#cc66ff;text-shadow:0 0 10px rgba(180,100,255,0.5);min-width:50px;text-align:right;}
+
+/* Flappy canvas fills the screen */
+#flappy-canvas {
+  position:fixed;inset:0;z-index:13;
+  width:100%;height:100%;
+  cursor:pointer;
+}
+
+/* Spacebar instruction overlay */
+#flappy-instruction {
+  position:fixed;inset:0;z-index:35;
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;
+  transition:opacity 0.4s ease;
+}
+#flappy-instruction.hidden{opacity:0;pointer-events:none;}
+#flappy-inst-text {
+  font-family:'Black Han Sans',sans-serif;
+  font-size:clamp(1.2rem,4vw,2.5rem);
+  color:#cc66ff;letter-spacing:0.15em;
+  background:rgba(255,255,255,0.7);
+  padding:16px 36px;border-radius:20px;
+  border:2px solid rgba(180,100,255,0.3);
+  backdrop-filter:blur(6px);
+  animation:instPulse 1.5s ease-in-out infinite;
+}
+@keyframes instPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+
+/* Game over overlay */
+#flappy-gameover {
+  position:fixed;inset:0;z-index:40;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:20px;
+  background:rgba(255,230,255,0.85);backdrop-filter:blur(10px);
+  transition:opacity 0.5s ease;
+}
+#flappy-gameover.hidden{opacity:0;pointer-events:none;}
+#flappy-gameover-title {
+  font-family:'Black Han Sans',sans-serif;
+  font-size:clamp(3rem,10vw,7rem);color:#cc66ff;
+  text-shadow:0 0 30px rgba(180,100,255,0.6);
+  animation:winPulse 0.6s ease-in-out infinite alternate;
+}
+#flappy-gameover-score {
+  font-family:'Black Han Sans',sans-serif;
+  font-size:clamp(1rem,3vw,2rem);color:#FF69B4;letter-spacing:0.1em;
+}
+#btn-flappy-retry {
+  font-family:'Black Han Sans',sans-serif;
+  font-size:clamp(1rem,3vw,1.8rem);letter-spacing:0.2em;
+  padding:14px 50px;border:3px solid #FF69B4;
+  background:rgba(255,105,180,0.15);color:#FF69B4;
+  cursor:pointer;border-radius:50px;
+  transition:background 0.2s,color 0.2s,box-shadow 0.2s,transform 0.1s;
+}
+#btn-flappy-retry:hover{background:#FF69B4;color:#fff;box-shadow:0 0 30px rgba(255,105,180,0.7);transform:scale(1.05);}
+
+#controls-bar3 {
+  position:fixed;bottom:0;left:0;right:0;z-index:35;
+  padding:8px 20px 10px;
+  background:rgba(255,255,255,0.55);backdrop-filter:blur(8px);
+  border-top:1px solid rgba(200,150,255,0.15);
+  display:flex;flex-direction:column;gap:4px;align-items:center;
+}
+#seek-bar3{width:100%;height:5px;background:rgba(180,100,255,0.15);border-radius:3px;overflow:hidden;}
+#seek-fill3{height:100%;width:0%;background:linear-gradient(90deg,#FF69B4,#cc66ff);border-radius:3px;transition:width 0.1s linear;}
+#time-display3{font-size:0.7rem;color:rgba(180,100,255,0.5);letter-spacing:0.12em;}
+
+#beat-flash.flash-l3 { animation:beatFlashL3 0.25s ease-out forwards; }
+@keyframes beatFlashL3 { 0%{background:radial-gradient(ellipse at center,rgba(255,105,180,0.1) 0%,transparent 70%);opacity:1} 100%{opacity:0} }
