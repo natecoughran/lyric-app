@@ -3,8 +3,7 @@
 // ============================================
 
 // ── DOM refs ──
-const introBg        = document.getElementById('intro-bg');
-const levelBg        = document.getElementById('level-bg');
+const bgEl           = document.getElementById('bg');
 const introScreen    = document.getElementById('intro-screen');
 const notesField     = document.getElementById('notes-field');
 const noteCountEl    = document.getElementById('note-count');
@@ -12,15 +11,20 @@ const noteProgress   = document.getElementById('note-progress-fill');
 const introMiku      = document.getElementById('intro-miku');
 const letsGoScreen   = document.getElementById('lets-go-screen');
 const btnLetsGoPlay  = document.getElementById('btn-lets-go-play');
+const levelTransition= document.getElementById('level-transition');
+const transitionText = document.getElementById('transition-text');
+const transitionSub  = document.getElementById('transition-sub');
 const level1Screen   = document.getElementById('level1-screen');
+const level2Screen   = document.getElementById('level2-screen');
 const loadingEl      = document.getElementById('loading');
 const loadingText    = document.getElementById('loading-text');
+// Level 1
+const l1Miku         = document.getElementById('level1-miku');
+const btnPlayPause   = document.getElementById('btn-play-pause');
+const btnStop        = document.getElementById('btn-stop');
 const seekFill       = document.getElementById('seek-fill');
 const timeDisplay    = document.getElementById('time-display');
 const scoreEl        = document.getElementById('score');
-const level1Miku     = document.getElementById('level1-miku');
-const btnPlayPause   = document.getElementById('btn-play-pause');
-const btnStop        = document.getElementById('btn-stop');
 const quizQNum       = document.getElementById('quiz-q-num');
 const quizProgressFill = document.getElementById('quiz-progress-fill');
 const quizQuestion   = document.getElementById('quiz-question');
@@ -28,6 +32,19 @@ const quizAnswers    = document.getElementById('quiz-answers');
 const quizFeedback   = document.getElementById('quiz-feedback');
 const quizBonusScore = document.getElementById('quiz-bonus-score');
 const quizDoneMsg    = document.getElementById('quiz-done-msg');
+// Level 2
+const l2Miku         = document.getElementById('level2-miku');
+const btn2PlayPause  = document.getElementById('btn2-play-pause');
+const btn2Stop       = document.getElementById('btn2-stop');
+const seekFill2      = document.getElementById('seek-fill2');
+const timeDisplay2   = document.getElementById('time-display2');
+const score2El       = document.getElementById('score2');
+const combo2Wrap     = document.getElementById('combo2-wrap');
+const combo2El       = document.getElementById('combo2');
+const arrowHint      = document.getElementById('arrow-hint');
+const arrowTarget    = document.getElementById('arrow-target');
+const arrowTimerBar  = document.getElementById('arrow-timer-bar');
+const ratingDisplay  = document.getElementById('rating-display');
 const canvas         = document.getElementById('particles');
 const ctx            = canvas.getContext('2d');
 
@@ -36,35 +53,34 @@ beatFlash.id = 'beat-flash';
 document.body.appendChild(beatFlash);
 
 // ══════════════════════════════════
-//   QUIZ DATA
+//   GAME STATE
+// ══════════════════════════════════
+
+let currentLevel = 0; // 0=intro, 1=level1, 2=level2
+let score        = 0;
+let score2       = 0;
+let combo2       = 0;
+let combo2Timeout = null;
+let playerReady  = false;
+let playWhenReady = false;
+
+// ══════════════════════════════════
+//   QUIZ DATA (Level 1)
 // ══════════════════════════════════
 
 const QUIZ_QUESTIONS = [
-  {
-    question: "What color is Hatsune Miku's hair?",
-    answers: ["Pink", "Teal / Cyan", "Purple", "Blue"],
-    correct: 1,
-  },
-  {
-    question: 'What does "Hatsune Miku" roughly mean in Japanese?',
-    answers: ["Dancing Princess", "First Sound of the Future", "Green Light Singer", "Voice of the Stars"],
-    correct: 1,
-  },
-  {
-    question: "What kind of software is Hatsune Miku?",
-    answers: ["A video game character", "A real singer", "A voice synthesizer", "A cartoon character"],
-    correct: 2,
-  },
-  {
-    question: "What is the name of Miku's iconic head accessory?",
-    answers: ["Headphones", "A crown", "A headset / microphone unit", "Cat ears"],
-    correct: 2,
-  },
+  { question: "What color is Hatsune Miku's hair?",
+    answers: ["Pink","Teal / Cyan","Purple","Blue"], correct: 1 },
+  { question: 'What does "Hatsune Miku" roughly mean in Japanese?',
+    answers: ["Dancing Princess","First Sound of the Future","Green Light Singer","Voice of the Stars"], correct: 1 },
+  { question: "What kind of software is Hatsune Miku?",
+    answers: ["A video game character","A real singer","A voice synthesizer","A cartoon character"], correct: 2 },
+  { question: "What is the name of Miku's iconic head accessory?",
+    answers: ["Headphones","A crown","A headset / microphone unit","Cat ears"], correct: 2 },
 ];
 
 const QUIZ_CORRECT_BONUS = 200;
 const QUIZ_WRONG_PENALTY = -100;
-
 let currentQuestion = 0;
 let quizBonusTotal  = 0;
 let quizAnswered    = false;
@@ -72,37 +88,28 @@ let quizComplete    = false;
 
 function loadQuestion(index) {
   const q = QUIZ_QUESTIONS[index];
-  quizAnswered    = false;
-  currentQuestion = index;
+  quizAnswered = false; currentQuestion = index;
   quizQNum.textContent = index + 1;
   quizProgressFill.style.width = (index / QUIZ_QUESTIONS.length * 100) + '%';
-
-  quizQuestion.style.opacity = '0';
-  quizQuestion.style.transform = 'translateY(8px)';
+  quizQuestion.style.opacity = '0'; quizQuestion.style.transform = 'translateY(8px)';
   setTimeout(() => {
     quizQuestion.textContent = q.question;
-    quizQuestion.style.transition = 'opacity 0.3s, transform 0.3s';
-    quizQuestion.style.opacity = '1';
-    quizQuestion.style.transform = 'translateY(0)';
+    quizQuestion.style.transition = 'opacity 0.3s,transform 0.3s';
+    quizQuestion.style.opacity = '1'; quizQuestion.style.transform = 'translateY(0)';
   }, 80);
-
-  quizFeedback.textContent = '';
-  quizFeedback.className = '';
+  quizFeedback.textContent = ''; quizFeedback.className = '';
   quizAnswers.innerHTML = '';
-
   q.answers.forEach((answer, i) => {
     const btn = document.createElement('button');
     btn.className = 'quiz-answer-btn';
     btn.textContent = answer;
-    btn.style.opacity = '0';
-    btn.style.transform = 'translateY(6px)';
+    btn.style.opacity = '0'; btn.style.transform = 'translateY(6px)';
     btn.addEventListener('click', () => handleAnswer(i, btn));
     btn.addEventListener('touchstart', (e) => { e.preventDefault(); handleAnswer(i, btn); }, { passive: false });
     quizAnswers.appendChild(btn);
     setTimeout(() => {
-      btn.style.transition = 'opacity 0.25s, transform 0.25s, background 0.15s, border-color 0.15s, box-shadow 0.15s';
-      btn.style.opacity = '1';
-      btn.style.transform = 'translateY(0)';
+      btn.style.transition = 'opacity 0.25s,transform 0.25s,background 0.15s,border-color 0.15s,box-shadow 0.15s';
+      btn.style.opacity = '1'; btn.style.transform = 'translateY(0)';
     }, 120 + i * 70);
   });
 }
@@ -110,65 +117,197 @@ function loadQuestion(index) {
 function handleAnswer(selectedIndex, btn) {
   if (quizAnswered || quizComplete) return;
   quizAnswered = true;
-
   const q = QUIZ_QUESTIONS[currentQuestion];
   const allBtns = quizAnswers.querySelectorAll('.quiz-answer-btn');
   allBtns.forEach(b => b.classList.add('disabled'));
-
   const isCorrect = selectedIndex === q.correct;
-
   if (isCorrect) {
-    btn.classList.remove('disabled');
-    btn.classList.add('correct');
+    btn.classList.remove('disabled'); btn.classList.add('correct');
     quizBonusTotal += QUIZ_CORRECT_BONUS;
     quizFeedback.textContent = `✓ Correct! +${QUIZ_CORRECT_BONUS} bonus points!`;
     quizFeedback.className = 'correct';
-    level1Miku.classList.add('beat');
-    setTimeout(() => level1Miku.classList.remove('beat'), 400);
-    for (let i = 0; i < 10; i++) spawnParticleAt(
-      Math.random() * window.innerWidth,
-      Math.random() * window.innerHeight, true
-    );
+    l1Miku.classList.add('beat'); setTimeout(() => l1Miku.classList.remove('beat'), 400);
+    for (let i = 0; i < 10; i++) spawnParticleAt(Math.random()*window.innerWidth, Math.random()*window.innerHeight, true);
   } else {
-    btn.classList.remove('disabled');
-    btn.classList.add('wrong');
-    allBtns[q.correct].classList.remove('disabled');
-    allBtns[q.correct].classList.add('reveal');
+    btn.classList.remove('disabled'); btn.classList.add('wrong');
+    allBtns[q.correct].classList.remove('disabled'); allBtns[q.correct].classList.add('reveal');
     quizBonusTotal += QUIZ_WRONG_PENALTY;
     quizFeedback.textContent = `✗ Not quite! ${QUIZ_WRONG_PENALTY} points`;
     quizFeedback.className = 'wrong';
-    const flash = document.createElement('div');
-    flash.className = 'penalty-flash';
-    document.body.appendChild(flash);
-    flash.addEventListener('animationend', () => flash.remove());
+    const flash = document.createElement('div'); flash.className = 'penalty-flash';
+    document.body.appendChild(flash); flash.addEventListener('animationend', () => flash.remove());
   }
-
-  // Update bonus & score
   quizBonusScore.textContent = quizBonusTotal >= 0 ? `+${quizBonusTotal}` : `${quizBonusTotal}`;
   quizBonusScore.style.color = quizBonusTotal >= 0 ? 'var(--l1-green)' : '#ff4444';
   addScore(isCorrect ? QUIZ_CORRECT_BONUS : QUIZ_WRONG_PENALTY);
 
   setTimeout(() => {
     if (currentQuestion < QUIZ_QUESTIONS.length - 1) {
-      quizAnswers.style.opacity = '0';
-      quizQuestion.style.opacity = '0';
-      quizFeedback.style.opacity = '0';
+      quizAnswers.style.opacity = '0'; quizQuestion.style.opacity = '0'; quizFeedback.style.opacity = '0';
       setTimeout(() => {
-        quizAnswers.style.opacity = '1';
-        quizQuestion.style.opacity = '1';
-        quizFeedback.style.opacity = '1';
+        quizAnswers.style.opacity = '1'; quizQuestion.style.opacity = '1'; quizFeedback.style.opacity = '1';
         loadQuestion(currentQuestion + 1);
       }, 350);
     } else {
       quizComplete = true;
       quizProgressFill.style.width = '100%';
-      quizQuestion.textContent = '';
-      quizAnswers.innerHTML = '';
-      quizFeedback.textContent = '';
+      quizQuestion.textContent = ''; quizAnswers.innerHTML = ''; quizFeedback.textContent = '';
       quizDoneMsg.classList.remove('hidden');
+      // Transition to Level 2 after a short pause
+      setTimeout(() => goToLevel2(), 2500);
     }
   }, 1800);
 }
+
+// ══════════════════════════════════
+//   LEVEL 2 — BEAT-SYNCED BOXING
+// ══════════════════════════════════
+
+const ARROWS = ['↑','↓','←','→'];
+const ARROW_KEYS = { ArrowUp:'↑', ArrowDown:'↓', ArrowLeft:'←', ArrowRight:'→' };
+const KEY_IDS    = { ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right' };
+const ARROW_TO_KEY = { '↑':'ArrowUp','↓':'ArrowDown','←':'ArrowLeft','→':'ArrowRight' };
+
+let currentArrow    = null;
+let arrowShownAt    = null;
+let arrowWindow     = 600; // ms to hit the arrow
+let arrowTimerHandle = null;
+let arrowTimerAnimHandle = null;
+let l2Active        = false;
+const PERFECT_MS    = 100;
+const GOOD_MS       = 280;
+
+function goToLevel2() {
+  // Show transition screen
+  transitionText.textContent = '⚡ Level 2 ⚡';
+  transitionSub.textContent  = 'Shadow Boxing! Hit the arrows!';
+  levelTransition.classList.remove('hidden');
+
+  setTimeout(() => {
+    levelTransition.classList.add('hidden');
+    level1Screen.classList.add('hidden');
+    level2Screen.classList.remove('hidden');
+    document.body.classList.remove('level1');
+    document.body.classList.add('level2');
+    currentLevel = 2;
+    l2Active = true;
+    arrowHint.textContent = 'Hit the arrow key!';
+    // Trigger first arrow shortly
+    setTimeout(showNextArrow, 800);
+  }, 2800);
+}
+
+function showNextArrow() {
+  if (!l2Active || !player.isPlaying) return;
+  currentArrow = ARROWS[Math.floor(Math.random() * ARROWS.length)];
+  arrowShownAt = performance.now();
+  arrowTarget.textContent = currentArrow;
+  arrowTarget.className   = '';
+
+  // Animate timer bar draining
+  arrowTimerBar.style.transition = 'none';
+  arrowTimerBar.style.transform  = 'scaleX(1)';
+  void arrowTimerBar.offsetWidth;
+  arrowTimerBar.style.transition = `transform ${arrowWindow}ms linear`;
+  arrowTimerBar.style.transform  = 'scaleX(0)';
+
+  // Miss if not hit in time
+  clearTimeout(arrowTimerHandle);
+  arrowTimerHandle = setTimeout(() => {
+    if (currentArrow) registerMiss();
+  }, arrowWindow);
+}
+
+function registerHit(key) {
+  if (!l2Active || !currentArrow) return;
+  const expected = ARROW_TO_KEY[currentArrow];
+  if (key !== expected) {
+    registerMiss(); return;
+  }
+  const elapsed = performance.now() - arrowShownAt;
+  clearTimeout(arrowTimerHandle);
+  currentArrow = null;
+
+  // Flash key indicator
+  highlightKey(key);
+
+  if (elapsed <= PERFECT_MS) {
+    showRating('PERFECT ✦', 'perfect');
+    addScore2(150 * Math.min(combo2 + 1, 8));
+    combo2++;
+    arrowTarget.classList.add('hit-perfect');
+    l2Miku.classList.add('hit-perfect');
+    setTimeout(() => { arrowTarget.classList.remove('hit-perfect'); l2Miku.classList.remove('hit-perfect'); }, 300);
+    for (let i = 0; i < 8; i++) spawnParticleAt(Math.random()*window.innerWidth, Math.random()*window.innerHeight, true);
+  } else {
+    showRating('GOOD ✓', 'good');
+    addScore2(75 * Math.min(combo2 + 1, 8));
+    combo2++;
+    arrowTarget.classList.add('hit-good');
+    l2Miku.classList.add('hit-good');
+    setTimeout(() => { arrowTarget.classList.remove('hit-good'); l2Miku.classList.remove('hit-good'); }, 300);
+    for (let i = 0; i < 4; i++) spawnParticleAt(Math.random()*window.innerWidth, Math.random()*window.innerHeight, true);
+  }
+
+  updateCombo2();
+  clearTimeout(combo2Timeout);
+  combo2Timeout = setTimeout(() => { combo2 = 0; updateCombo2(); }, 3000);
+
+  // Next arrow
+  setTimeout(showNextArrow, 600 + Math.random() * 400);
+}
+
+function registerMiss() {
+  if (!l2Active) return;
+  currentArrow = null;
+  clearTimeout(arrowTimerHandle);
+  arrowTimerBar.style.transition = 'none';
+  arrowTimerBar.style.transform  = 'scaleX(0)';
+  showRating('MISS ✗', 'miss');
+  arrowTarget.classList.add('hit-miss');
+  l2Miku.classList.add('hit-miss');
+  setTimeout(() => { arrowTarget.classList.remove('hit-miss'); l2Miku.classList.remove('hit-miss'); }, 350);
+  if (combo2 > 0) { combo2 = 0; updateCombo2(); }
+  setTimeout(showNextArrow, 800 + Math.random() * 400);
+}
+
+function showRating(text, cls) {
+  ratingDisplay.textContent = text;
+  ratingDisplay.className = cls;
+  clearTimeout(ratingDisplay._timeout);
+  ratingDisplay._timeout = setTimeout(() => { ratingDisplay.textContent = ''; ratingDisplay.className = ''; }, 900);
+}
+
+function highlightKey(keyCode) {
+  const map = { ArrowUp:'↑', ArrowDown:'↓', ArrowLeft:'←', ArrowRight:'→' };
+  const arrow = map[keyCode];
+  const keys  = document.querySelectorAll('.key');
+  keys.forEach(k => { if (k.textContent === arrow) { k.classList.add('active'); setTimeout(() => k.classList.remove('active'), 200); }});
+}
+
+function addScore2(points) {
+  score2 += points;
+  score2El.textContent = score2.toLocaleString();
+  score2El.classList.toggle('negative', score2 < 0);
+}
+
+function updateCombo2() {
+  if (combo2 >= 2) {
+    combo2Wrap.classList.remove('hidden');
+    combo2Wrap.className = (combo2 >= 5 ? 'hot' : combo2 >= 3 ? 'warm' : '');
+    combo2El.textContent = combo2;
+  } else {
+    combo2Wrap.classList.add('hidden');
+  }
+}
+
+// Keyboard handler
+document.addEventListener('keydown', (e) => {
+  if (currentLevel === 2 && ARROW_KEYS[e.key]) {
+    e.preventDefault();
+    registerHit(e.key);
+  }
+});
 
 // ══════════════════════════════════
 //   INTRO NOTE CATCHING
@@ -183,7 +322,7 @@ let introActive   = true;
 
 function spawnIntroNote() {
   if (!introActive) return;
-  const note   = document.createElement('div');
+  const note = document.createElement('div');
   note.className = 'falling-note';
   const symbol = NOTE_SYMBOLS[Math.floor(Math.random() * NOTE_SYMBOLS.length)];
   const color  = NOTE_COLORS[Math.floor(Math.random() * NOTE_COLORS.length)];
@@ -193,18 +332,14 @@ function spawnIntroNote() {
   note.textContent = symbol;
   note.style.cssText = `left:${x}px;top:-80px;color:${color};font-size:${size}rem;animation-duration:${dur}s;text-shadow:0 0 12px ${color}`;
   note.addEventListener('click', (e) => catchIntroNote(note, e.clientX, e.clientY, symbol, color));
-  note.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    catchIntroNote(note, e.touches[0].clientX, e.touches[0].clientY, symbol, color);
-  }, { passive: false });
+  note.addEventListener('touchstart', (e) => { e.preventDefault(); catchIntroNote(note, e.touches[0].clientX, e.touches[0].clientY, symbol, color); }, { passive: false });
   notesField.appendChild(note);
   note.addEventListener('animationend', () => note.remove());
 }
 
 function catchIntroNote(note, x, y, symbol, color) {
   if (!introActive || note.dataset.caught) return;
-  note.dataset.caught = 'true';
-  note.remove();
+  note.dataset.caught = 'true'; note.remove();
   popEffect(x, y, symbol, color);
   for (let i = 0; i < 5; i++) spawnParticleAt(x, y, true);
   caughtNotes++;
@@ -220,31 +355,19 @@ function winIntro() {
   clearInterval(spawnInterval);
   notesField.querySelectorAll('.falling-note').forEach(n => n.remove());
   introMiku.classList.add('celebrate');
-  // Show Let's Go screen
   letsGoScreen.classList.remove('hidden');
 }
 
-// ── Let's Go Play button ──
 btnLetsGoPlay.addEventListener('click', () => {
-  // Swap backgrounds
-  introBg.classList.add('hidden');
-  levelBg.classList.remove('hidden');
-  // Hide Let's Go, show Level 1
   letsGoScreen.classList.add('hidden');
   introScreen.classList.add('hidden');
   level1Screen.classList.remove('hidden');
-  // Load quiz
+  document.body.classList.add('level1');
+  currentLevel = 1;
   loadQuestion(0);
-  // Start music
-  if (playerReady) {
-    player.requestPlay();
-  } else {
-    playWhenReady = true;
-  }
+  if (playerReady) { player.requestPlay(); }
+  else { playWhenReady = true; }
 });
-
-let playerReady  = false;
-let playWhenReady = false;
 
 spawnInterval = setInterval(spawnIntroNote, 900);
 setTimeout(spawnIntroNote, 100);
@@ -252,10 +375,8 @@ setTimeout(spawnIntroNote, 400);
 setTimeout(spawnIntroNote, 700);
 
 // ══════════════════════════════════
-//   SCORE
+//   SCORE (Level 1)
 // ══════════════════════════════════
-
-let score = 0;
 
 function addScore(amount) {
   score += amount;
@@ -273,7 +394,9 @@ resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
 function spawnParticleAt(x, y, energized) {
-  const colors = ['#39C5BB','#FF69B4','#00FFFF','#00ff88','#ffffff'];
+  const colors = currentLevel === 2
+    ? ['#00BFFF','#cc66ff','#ffffff','#88ccff','#ddaaff']
+    : ['#39C5BB','#FF69B4','#00FFFF','#00ff88','#ffffff'];
   for (let i = 0; i < (energized ? 3 : 1); i++) {
     particles.push({
       x, y,
@@ -335,57 +458,68 @@ player.addListener({
     playerReady = true;
     loadingText.textContent = 'Ready!';
     setTimeout(() => loadingEl.classList.add('hidden'), 500);
-    if (playWhenReady) {
-      setTimeout(() => player.requestPlay(), 200);
-      playWhenReady = false;
-    }
+    if (playWhenReady) { setTimeout(() => player.requestPlay(), 200); playWhenReady = false; }
   },
 
   onTimeUpdate(position) {
-    if (player.data?.song?.length) {
-      seekFill.style.width = (position / player.data.song.length * 100) + '%';
-      timeDisplay.textContent = formatTime(position) + ' / ' + formatTime(player.data.song.length);
+    const len = player.data?.song?.length;
+    if (len) {
+      const pct = (position / len * 100) + '%';
+      if (currentLevel === 1) {
+        seekFill.style.width  = pct;
+        timeDisplay.textContent = formatTime(position) + ' / ' + formatTime(len);
+      } else if (currentLevel === 2) {
+        seekFill2.style.width = pct;
+        timeDisplay2.textContent = formatTime(position) + ' / ' + formatTime(len);
+      }
     }
-    if (Math.random() < 0.1) spawnParticle(false);
+    if (Math.random() < 0.08) spawnParticle(false);
+
     const beat = player.findBeat(position);
     if (beat && Math.abs(position - beat.startTime) < 30) {
-      beatFlash.classList.remove('flash'); void beatFlash.offsetWidth; beatFlash.classList.add('flash');
-      level1Miku.classList.add('beat'); setTimeout(() => level1Miku.classList.remove('beat'), 200);
+      beatFlash.className = '';
+      void beatFlash.offsetWidth;
+      beatFlash.className = currentLevel === 2 ? 'flash-l2' : 'flash-l1';
+      if (currentLevel === 1) { l1Miku.classList.add('beat'); setTimeout(() => l1Miku.classList.remove('beat'), 200); }
     }
   },
 
-  onPlay()  { btnPlayPause.textContent = '⏸ PAUSE'; },
-  onPause() { btnPlayPause.textContent = '▶ PLAY'; },
-
-  onStop()  {
-    btnPlayPause.textContent = '▶ PLAY';
-    seekFill.style.width = '0%';
-    if (score !== 0) {
+  onPlay() {
+    if (currentLevel === 1) btnPlayPause.textContent = '⏸ PAUSE';
+    if (currentLevel === 2) btn2PlayPause.textContent = '⏸ PAUSE';
+  },
+  onPause() {
+    if (currentLevel === 1) btnPlayPause.textContent = '▶ PLAY';
+    if (currentLevel === 2) { btn2PlayPause.textContent = '▶ PLAY'; l2Active = false; }
+  },
+  onStop() {
+    if (currentLevel === 1) btnPlayPause.textContent = '▶ PLAY';
+    if (currentLevel === 2) { btn2PlayPause.textContent = '▶ PLAY'; l2Active = false; currentArrow = null; }
+    seekFill.style.width = '0%'; seekFill2.style.width = '0%';
+    const totalScore = score + score2;
+    if (totalScore !== 0) {
       const final = document.createElement('div');
       final.id = 'final-score';
       final.innerHTML = `
         <div class="final-score-title">🎉 Final Score</div>
-        <div class="final-score-number ${score >= 0 ? 'positive' : 'negative'}">${score.toLocaleString()}</div>
-        <div class="final-score-sub">${score >= 0 ? 'Amazing! Play again to beat it!' : 'Better luck next time!'}</div>`;
+        <div class="final-score-number ${totalScore >= 0 ? 'positive' : 'negative'}">${totalScore.toLocaleString()}</div>
+        <div class="final-score-sub">${totalScore >= 0 ? 'Amazing! Play again to beat it!' : 'Better luck next time!'}</div>`;
       document.body.appendChild(final);
       setTimeout(() => final.classList.add('show'), 50);
       setTimeout(() => { final.classList.remove('show'); setTimeout(() => final.remove(), 600); }, 4500);
-      score = 0; scoreEl.textContent = '0'; scoreEl.classList.remove('negative');
     }
   },
-
-  onError(err) {
-    console.error('TextAlive error:', err);
-    loadingText.textContent = 'Error loading. Check console (F12).';
-  },
+  onError(err) { console.error('TextAlive error:', err); loadingText.textContent = 'Error loading. Check console (F12).'; },
 });
 
-btnPlayPause.addEventListener('click', () => {
-  if (player.isPlaying) player.requestPause();
-  else player.requestPlay();
+// Button controls
+btnPlayPause.addEventListener('click',  () => player.isPlaying ? player.requestPause() : player.requestPlay());
+btnStop.addEventListener('click',       () => player.requestStop());
+btn2PlayPause.addEventListener('click', () => {
+  if (player.isPlaying) { player.requestPause(); l2Active = false; }
+  else { player.requestPlay(); l2Active = true; setTimeout(showNextArrow, 500); }
 });
-
-btnStop.addEventListener('click', () => player.requestStop());
+btn2Stop.addEventListener('click', () => player.requestStop());
 
 function formatTime(ms) {
   if (!ms || ms < 0) return '0:00';

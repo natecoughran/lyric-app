@@ -15,12 +15,7 @@
 
   <div id="media"></div>
   <canvas id="particles"></canvas>
-
-  <!-- ══ INTRO BG (bright teal/pink gradient) ══ -->
-  <div id="intro-bg"></div>
-
-  <!-- ══ LEVEL BG (dark green/black/pink) ══ -->
-  <div id="level-bg" class="hidden"></div>
+  <div id="bg"></div>
 
   <!-- ══ INTRO SCREEN ══ -->
   <div id="intro-screen">
@@ -46,10 +41,14 @@
     <button id="btn-lets-go-play">▶ Start Playing!</button>
   </div>
 
+  <!-- ══ LEVEL TRANSITION ══ -->
+  <div id="level-transition" class="hidden">
+    <div id="transition-text"></div>
+    <div id="transition-sub"></div>
+  </div>
+
   <!-- ══ LEVEL 1 SCREEN ══ -->
   <div id="level1-screen" class="hidden">
-
-    <!-- HUD -->
     <div id="hud">
       <div id="level-badge">LEVEL 1</div>
       <div id="hud-controls">
@@ -61,16 +60,10 @@
         <div id="score">0</div>
       </div>
     </div>
-
-    <!-- Two column: quiz left, Miku right -->
     <div id="level1-main">
-
-      <!-- LEFT: Quiz -->
       <div id="quiz-panel">
         <div id="quiz-header-text">⭐ Miku Quiz ⭐</div>
-        <div id="quiz-progress-wrap">
-          <div id="quiz-progress-fill"></div>
-        </div>
+        <div id="quiz-progress-wrap"><div id="quiz-progress-fill"></div></div>
         <div id="quiz-q-label">Question <span id="quiz-q-num">1</span> of 4</div>
         <div id="quiz-question"></div>
         <div id="quiz-answers"></div>
@@ -79,30 +72,72 @@
           <span id="quiz-bonus-label">QUIZ BONUS:</span>
           <span id="quiz-bonus-score">0</span>
         </div>
-        <div id="quiz-done-msg" class="hidden">
-          🎉 Quiz complete! Great job!
-        </div>
+        <div id="quiz-done-msg" class="hidden">🎉 Quiz complete! Get ready for Level 2...</div>
       </div>
-
-      <!-- RIGHT: Big alien Miku -->
       <div id="level1-miku-wrap">
         <img id="level1-miku" src="miku_alien.png" alt="Alien Miku"/>
       </div>
-
     </div>
-
-    <!-- Seek bar at bottom -->
     <div id="controls-bar">
       <div id="seek-bar"><div id="seek-fill"></div></div>
       <div id="time-display">0:00 / 0:00</div>
     </div>
-
-    <!-- Loading overlay -->
     <div id="loading">
       <div id="loading-icon">⟳</div>
       <div id="loading-text">Loading Green Lights Serenade...</div>
     </div>
+  </div>
 
+  <!-- ══ LEVEL 2 SCREEN ══ -->
+  <div id="level2-screen" class="hidden">
+    <div id="hud2">
+      <div id="level2-badge">LEVEL 2</div>
+      <div id="hud2-controls">
+        <button id="btn2-play-pause">⏸ PAUSE</button>
+        <button id="btn2-stop">■ STOP</button>
+      </div>
+      <div id="score2-wrap">
+        <div id="score2-label">SCORE</div>
+        <div id="score2">0</div>
+      </div>
+    </div>
+
+    <div id="level2-main">
+
+      <!-- LEFT: Boxing game -->
+      <div id="boxing-panel">
+        <div id="combo2-wrap" class="hidden">
+          <div id="combo2-label">COMBO</div>
+          <div id="combo2">0</div>
+          <div id="combo2-x">x</div>
+        </div>
+        <div id="arrow-display">
+          <div id="arrow-hint">Get ready...</div>
+          <div id="arrow-target"></div>
+          <div id="arrow-timer-bar-wrap">
+            <div id="arrow-timer-bar"></div>
+          </div>
+        </div>
+        <div id="rating-display"></div>
+        <div id="keys-legend">
+          <div class="key-hint"><span class="key">↑</span></div>
+          <div class="key-hint"><span class="key">←</span></div>
+          <div class="key-hint"><span class="key">↓</span></div>
+          <div class="key-hint"><span class="key">→</span></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Miku Jack -->
+      <div id="level2-miku-wrap">
+        <img id="level2-miku" src="miku_jack.png" alt="Miku Jack"/>
+      </div>
+
+    </div>
+
+    <div id="controls-bar2">
+      <div id="seek-bar2"><div id="seek-fill2"></div></div>
+      <div id="time-display2">0:00 / 0:00</div>
+    </div>
   </div>
 
   <script src="app.js"></script>
