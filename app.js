@@ -448,6 +448,41 @@ function roundRect(ctx, x, y, w, h, r) {
 }
 
 
+
+function playEatSound() {
+  try {
+    const ctx = getAudioCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+
+    // Quick rising chirp -- softer and shorter than the pop
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    const pitches = [659, 784, 880, 988, 1047, 1175];
+    const pitch = pitches[Math.floor(Math.random() * pitches.length)];
+    osc.frequency.setValueAtTime(pitch, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(pitch * 1.3, ctx.currentTime + 0.06);
+    gain.gain.setValueAtTime(0.12, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.1);
+
+    // Tiny second ping for brightness
+    const osc2  = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(pitch * 3, ctx.currentTime);
+    gain2.gain.setValueAtTime(0.05, ctx.currentTime);
+    gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.07);
+    osc2.start(ctx.currentTime);
+    osc2.stop(ctx.currentTime + 0.07);
+  } catch(e) {}
+}
+
 // ══════════════════════════════════
 //   LEVEL 4 — MIKU PAC-MAN RUNNER
 // ══════════════════════════════════
@@ -580,6 +615,7 @@ function pacLoop(now) {
       n.eaten = true;
       notesEaten++;
       score4 += 50;
+      playEatSound();
       score4El.textContent = score4.toLocaleString();
       score4TotalEl.textContent = (score + score2 + leeksDodged * 50 + score4).toLocaleString();
       for (let i = 0; i < 5; i++) spawnParticleAt(pac.x + pac.w, pac.y + pac.h/2, true);
