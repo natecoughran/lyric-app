@@ -109,6 +109,8 @@ const QUIZ_QUESTIONS = [
     answers: ["A video game character","A real singer","A voice synthesizer","A cartoon character"], correct: 2 },
   { question: "What is the name of Miku's iconic head accessory?",
     answers: ["Headphones","A crown","A headset / microphone unit","Cat ears"], correct: 2 },
+  { question: "In what year was Hatsune Miku first released?",
+    answers: ["2004","2007","2009","2012"], correct: 1 },
 ];
 
 const QUIZ_CORRECT_BONUS = 200;
@@ -885,28 +887,39 @@ function getAudioCtx() {
   return audioCtx;
 }
 
-function playPopSound(color) {
+function playPopSound() {
   try {
     const ctx  = getAudioCtx();
-    const osc  = ctx.createOscillator();
-    const gain = ctx.createGain();
+    // Resume context if suspended (browser autoplay policy)
+    if (ctx.state === 'suspended') ctx.resume();
 
-    // Pick a fun pitch based on note color for variety
     const pitches = [523, 587, 659, 784, 880, 1047];
     const pitch   = pitches[Math.floor(Math.random() * pitches.length)];
 
+    // Main tone
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
     osc.connect(gain);
     gain.connect(ctx.destination);
-
-    osc.type      = 'sine';
+    osc.type = 'sine';
     osc.frequency.setValueAtTime(pitch, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(pitch * 1.5, ctx.currentTime + 0.08);
-
-    gain.gain.setValueAtTime(0.18, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
-
+    osc.frequency.exponentialRampToValueAtTime(pitch * 2, ctx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.4, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
     osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.18);
+    osc.stop(ctx.currentTime + 0.22);
+
+    // Bright overtone for sparkle
+    const osc2  = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(pitch * 2, ctx.currentTime);
+    gain2.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+    osc2.start(ctx.currentTime);
+    osc2.stop(ctx.currentTime + 0.15);
   } catch(e) {
     // Silently fail if audio not available
   }
@@ -943,6 +956,7 @@ function spawnIntroNote() {
 function catchIntroNote(note, x, y, symbol, color) {
   if (!introActive || note.dataset.caught) return;
   note.dataset.caught = 'true'; note.remove();
+  playPopSound();
   popEffect(x, y, symbol, color);
   for (let i = 0; i < 5; i++) spawnParticleAt(x, y, true);
   caughtNotes++;
