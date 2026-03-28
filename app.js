@@ -464,7 +464,7 @@ const LEEK4_SPEED = 4.2;
 const mikuPacImg = new Image();
 mikuPacImg.src = 'miku_pac.png';
 
-let pac = { x:0, y:0, vy:0, w:110, h:110, targetY:0 };
+let pac = { x:0, y:0, vy:0, w:110, h:110, targetY:0, targetX:0 };
 let notes4  = [];
 let leeks4  = [];
 let lastNote4Time = 0;
@@ -477,6 +477,7 @@ function initPac() {
   pac.x = 110;
   pac.y = pacCanvas.height * 0.5;
   pac.targetY = pac.y;
+  pac.targetX = 110;
   notes4  = [];
   leeks4  = [];
   notesEaten = 0;
@@ -513,6 +514,14 @@ function movePacDown() {
   if (!l4Active || !pacRunning || pacPaused) return;
   pac.targetY = Math.min(pacCanvas.height - 80, pac.targetY + pacCanvas.height * 0.14);
 }
+function movePacLeft() {
+  if (!l4Active || !pacRunning || pacPaused) return;
+  pac.targetX = Math.max(40, pac.targetX - pacCanvas.width * 0.1);
+}
+function movePacRight() {
+  if (!l4Active || !pacRunning || pacPaused) return;
+  pac.targetX = Math.min(pacCanvas.width * 0.5, pac.targetX + pacCanvas.width * 0.1);
+}
 
 function pacLoop(now) {
   if (!l4Active || pacPaused) return;
@@ -521,8 +530,9 @@ function pacLoop(now) {
   const W = pacCanvas.width;
   const H = pacCanvas.height;
 
-  // Smooth vertical movement toward target
+  // Smooth movement toward target (both axes)
   pac.y += (pac.targetY - pac.y) * 0.18;
+  pac.x += (pac.targetX - pac.x) * 0.18;
 
   // Spawn notes
   if (now - lastNote4Time > NOTE_INTERVAL4) {
@@ -854,8 +864,10 @@ document.addEventListener('keydown', (e) => {
     flapMiku();
   }
   if (currentLevel === 4) {
-    if (e.key === 'ArrowUp')   { e.preventDefault(); movePacUp();   if (!pacRunning) startPac(); }
-    if (e.key === 'ArrowDown') { e.preventDefault(); movePacDown(); if (!pacRunning) startPac(); }
+    if (e.key === 'ArrowUp')    { e.preventDefault(); movePacUp();    if (!pacRunning) startPac(); }
+    if (e.key === 'ArrowDown')  { e.preventDefault(); movePacDown();  if (!pacRunning) startPac(); }
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); movePacLeft();  if (!pacRunning) startPac(); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); movePacRight(); if (!pacRunning) startPac(); }
   }
 });
 
