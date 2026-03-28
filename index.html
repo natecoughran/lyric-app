@@ -16,47 +16,48 @@
   <div id="media"></div>
   <div id="bg"></div>
   <canvas id="particles"></canvas>
-  <div id="beat-ring"></div>
 
-  <!-- ══════════════════════════════════
-       INTRO SCREEN
-  ══════════════════════════════════ -->
+  <!-- ══ INTRO SCREEN ══ -->
   <div id="intro-screen">
-
     <div id="intro-header">
       <div id="intro-title">Green Lights Serenade</div>
       <div id="intro-artist">Hatsune Miku / Omoi</div>
       <div id="intro-instruction">Catch the notes to start! 🎵</div>
     </div>
-
-    <!-- Note counter -->
     <div id="note-counter">
       <div id="note-progress-wrap">
         <div id="note-progress-fill"></div>
       </div>
       <div id="note-count-label"><span id="note-count">0</span> / 5 notes caught</div>
     </div>
-
-    <!-- Miku on intro screen -->
     <div id="intro-miku-wrap">
       <img id="intro-miku" src="miku_image.png" alt="Miku"/>
     </div>
-
-    <!-- Falling notes container -->
     <div id="notes-field"></div>
-
-    <!-- Win overlay -->
     <div id="win-overlay">
       <div id="win-text">🎉 Let's Go! 🎉</div>
       <div id="win-sub">Green Lights Serenade is starting...</div>
     </div>
-
   </div>
 
-  <!-- ══════════════════════════════════
-       PLAYER SCREEN
-  ══════════════════════════════════ -->
+  <!-- ══ PLAYER SCREEN ══ -->
   <div id="app" class="hidden">
+
+    <!-- Score HUD -->
+    <div id="hud">
+      <div id="score-wrap">
+        <div id="score-label">SCORE</div>
+        <div id="score">0</div>
+      </div>
+      <div id="combo-wrap">
+        <div id="combo-label">COMBO</div>
+        <div id="combo">0</div>
+        <div id="combo-x">x</div>
+      </div>
+    </div>
+
+    <!-- Falling notes during gameplay -->
+    <div id="game-notes-field"></div>
 
     <div id="header">
       <div id="song-title">Green Lights Serenade</div>
@@ -64,18 +65,15 @@
     </div>
 
     <div id="main-content">
-
       <div id="lyric-stage">
         <div id="lyric-char"></div>
         <div id="lyric-word"></div>
         <div id="lyric-phrase"></div>
         <div id="lyric-translation"></div>
       </div>
-
       <div id="character-wrap">
         <img id="miku-img" src="miku_image.png" alt="Miku"/>
       </div>
-
     </div>
 
     <div id="controls">

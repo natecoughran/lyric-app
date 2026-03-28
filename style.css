@@ -379,3 +379,149 @@ html, body {
 }
 #beat-flash.flash { animation: beatFlash 0.25s ease-out forwards; }
 @keyframes beatFlash { 0% { opacity: 1; } 100% { opacity: 0; } }
+
+/* ══════════════════════════════════
+   IN-GAME HUD & SCORING
+══════════════════════════════════ */
+
+/* Score HUD — top of screen */
+#hud {
+  position: fixed; top: 16px; left: 0; right: 0;
+  z-index: 30; pointer-events: none;
+  display: flex; justify-content: space-between;
+  align-items: flex-start; padding: 0 24px;
+}
+
+#score-wrap {
+  background: rgba(255,255,255,0.3);
+  backdrop-filter: blur(8px);
+  border: 2px solid rgba(57,197,187,0.4);
+  border-radius: 16px; padding: 8px 20px;
+  text-align: center;
+}
+#score-label {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 0.7rem; letter-spacing: 0.2em;
+  color: rgba(57,197,187,0.8);
+}
+#score {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: clamp(1.4rem, 4vw, 2.2rem);
+  color: var(--miku-teal);
+  text-shadow: 0 0 14px rgba(57,197,187,0.7);
+  min-width: 80px; text-align: center;
+  transition: transform 0.1s;
+}
+#score.pop { animation: scorePop 0.2s ease-out; }
+@keyframes scorePop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+/* Combo counter */
+#combo-wrap {
+  background: rgba(255,255,255,0.3);
+  backdrop-filter: blur(8px);
+  border: 2px solid rgba(255,105,180,0.4);
+  border-radius: 16px; padding: 8px 20px;
+  text-align: center;
+  opacity: 0; transform: scale(0.8);
+  transition: opacity 0.3s, transform 0.3s, border-color 0.3s;
+}
+#combo-wrap.show { opacity: 1; transform: scale(1); }
+#combo-wrap.warm { border-color: rgba(255,180,0,0.7); }
+#combo-wrap.hot  { border-color: rgba(255,80,80,0.9); animation: comboFlash 0.4s ease-in-out infinite alternate; }
+@keyframes comboFlash {
+  from { box-shadow: 0 0 10px rgba(255,80,80,0.4); }
+  to   { box-shadow: 0 0 25px rgba(255,80,80,0.9); }
+}
+#combo-label {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 0.7rem; letter-spacing: 0.2em;
+  color: rgba(255,105,180,0.8);
+}
+#combo {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: clamp(1.4rem, 4vw, 2.2rem);
+  color: var(--miku-pink);
+  text-shadow: 0 0 14px rgba(255,105,180,0.7);
+  min-width: 40px; text-align: center;
+}
+#combo-x {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 0.75rem; color: var(--miku-pink);
+  opacity: 0.7; letter-spacing: 0.1em;
+}
+
+/* Falling notes during game */
+#game-notes-field {
+  position: fixed; inset: 0; z-index: 15; pointer-events: none;
+}
+.game-note {
+  position: absolute;
+  cursor: pointer; pointer-events: all;
+  user-select: none;
+  animation: fallDown linear forwards;
+  transition: transform 0.08s;
+}
+.game-note:hover { transform: scale(1.25); }
+.game-note:active { transform: scale(0.9); }
+
+/* Points popup */
+.points-popup {
+  position: fixed; z-index: 50;
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 1.2rem; pointer-events: none;
+  animation: pointsFloat 0.8s ease-out forwards;
+  letter-spacing: 0.05em;
+}
+.points-popup.big { font-size: 2rem; }
+@keyframes pointsFloat {
+  0%   { transform: translateY(0) scale(0.8); opacity: 1; }
+  100% { transform: translateY(-60px) scale(1.1); opacity: 0; }
+}
+
+/* MISS indicator */
+.miss-indicator {
+  position: fixed; z-index: 50;
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 1.1rem; color: #ff4444;
+  text-shadow: 0 0 10px rgba(255,68,68,0.8);
+  pointer-events: none;
+  animation: missFloat 0.7s ease-out forwards;
+}
+@keyframes missFloat {
+  0%   { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-40px); }
+}
+
+/* Final score overlay */
+#final-score {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 16px;
+  background: rgba(57,197,187,0.15);
+  backdrop-filter: blur(8px);
+  opacity: 0; transition: opacity 0.5s;
+  pointer-events: none;
+}
+#final-score.show { opacity: 1; }
+.final-score-title {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: clamp(1.5rem, 5vw, 3rem);
+  color: var(--miku-teal);
+  letter-spacing: 0.2em;
+}
+.final-score-number {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: clamp(4rem, 15vw, 9rem);
+  color: var(--miku-teal);
+  text-shadow: 0 0 40px rgba(57,197,187,0.8);
+  animation: winPulse 0.6s ease-in-out infinite alternate;
+}
+.final-score-sub {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: clamp(0.9rem, 2.5vw, 1.4rem);
+  color: var(--miku-pink); letter-spacing: 0.1em;
+}
