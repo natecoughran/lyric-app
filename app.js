@@ -35,7 +35,7 @@ resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
 function spawnParticle(energized) {
-  const colors = ['#00ffcc', '#88ff44', '#00ccff', '#ffffaa', '#ffffff'];
+  const colors = ['#39C5BB', '#FF69B4', '#00FFFF', '#ffffff', '#FFB7DD'];
   particles.push({
     x:       Math.random() * canvas.width,
     y:       Math.random() * canvas.height,
@@ -114,6 +114,8 @@ const player = new Player({
 player.addListener({
 
   onAppReady(app) {
+    // If the TextAlive host provides a song, use it.
+    // If running standalone, load our song ourselves.
     if (!app.songUrl) {
       player.createFromSongUrl('https://piapro.jp/t/61Y2', {
         video: {

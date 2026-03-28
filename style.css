@@ -1,14 +1,14 @@
 /* ============================================
    グリーンライツ・セレナーデ — Lyric App Styles
+   Miku Edition
    ============================================ */
 
 :root {
-  --teal:    #00ffcc;
-  --pink:    #88ff44;
-  --blue:    #00ccff;
-  --yellow:  #ffffaa;
-  --white:   #ffffff;
-  --dark:    #020f08;
+  --miku-teal:  #39C5BB;
+  --miku-pink:  #FF69B4;
+  --miku-cyan:  #00FFFF;
+  --white:      #ffffff;
+  --dark-text:  #1a4a47;
 }
 
 /* --- Reset & Base --- */
@@ -23,24 +23,23 @@ html, body {
   height: 100%;
   overflow: hidden;
   font-family: 'Noto Sans JP', sans-serif;
-  background: var(--dark);
   color: var(--white);
 }
 
-/* --- Hide the TextAlive media/banner element --- */
+/* --- Hide the TextAlive media element --- */
 #media {
   display: none !important;
 }
 
-/* --- Animated gradient background --- */
+/* --- Animated soft gradient background --- */
 #bg {
   position: fixed;
   inset: 0;
   z-index: 0;
   background: linear-gradient(135deg,
-    #001a0a, #002a1a, #001a2a, #0a1a00);
-  background-size: 400% 400%;
-  animation: gradientShift 8s ease infinite;
+    #b2f0ed, #d4f5f3, #ffd6eb, #ffe8f5, #b2f0ed);
+  background-size: 300% 300%;
+  animation: gradientShift 10s ease infinite;
 }
 
 @keyframes gradientShift {
@@ -50,9 +49,7 @@ html, body {
 }
 
 #bg.playing {
-  background: linear-gradient(135deg,
-    #002a10, #003a20, #002a3a, #1a2a00);
-  animation-duration: 4s;
+  animation-duration: 5s;
 }
 
 /* --- Particle canvas --- */
@@ -76,21 +73,20 @@ html, body {
 
 #beat-ring::after {
   content: '';
-  width: 300px;
-  height: 300px;
+  width: 400px;
+  height: 400px;
   border-radius: 50%;
-  border: 2px solid rgba(0, 229, 204, 0);
+  border: 3px solid rgba(57, 197, 187, 0);
   transition: border-color 0.05s, transform 0.05s;
 }
 
 #beat-ring.pulse::after {
-  border-color: rgba(0, 229, 204, 0.6);
-  transform: scale(1.15);
+  border-color: rgba(57, 197, 187, 0.5);
+  transform: scale(1.12);
   transition: none;
 }
 
 /* --- App container --- */
-/* Fixed positioning makes it immune to anything TextAlive injects */
 #app {
   position: fixed;
   inset: 0;
@@ -99,34 +95,33 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 40px 20px 30px;
+  padding: 36px 24px 28px;
 }
 
 /* --- Header --- */
 #header {
   text-align: center;
-  letter-spacing: 0.15em;
 }
 
 #song-title {
   font-family: 'Black Han Sans', sans-serif;
-  font-size: clamp(2rem, 6vw, 4.5rem);
-  color: var(--teal);
+  font-size: clamp(1.4rem, 4vw, 3rem);
+  color: var(--miku-teal);
   text-shadow:
-    0 0 20px rgba(0, 255, 204, 0.8),
-    0 0 60px rgba(0, 255, 204, 0.3);
-  letter-spacing: 0.25em;
+    0 0 20px rgba(57, 197, 187, 0.6),
+    0 2px 4px rgba(0,0,0,0.1);
+  letter-spacing: 0.2em;
   animation: titleGlow 3s ease-in-out infinite alternate;
 }
 
 @keyframes titleGlow {
-  from { text-shadow: 0 0 20px rgba(0, 255, 204, 0.8), 0 0 60px rgba(0, 255, 204, 0.3); }
-  to   { text-shadow: 0 0 30px rgba(0, 255, 204, 1),   0 0 100px rgba(0, 255, 204, 0.6); }
+  from { text-shadow: 0 0 15px rgba(57, 197, 187, 0.5), 0 2px 4px rgba(0,0,0,0.1); }
+  to   { text-shadow: 0 0 30px rgba(57, 197, 187, 0.9), 0 2px 4px rgba(0,0,0,0.1); }
 }
 
 #song-artist {
-  font-size: clamp(0.7rem, 2vw, 1rem);
-  color: rgba(255,255,255,0.5);
+  font-size: clamp(0.65rem, 1.5vw, 0.9rem);
+  color: rgba(57, 197, 187, 0.7);
   margin-top: 6px;
   letter-spacing: 0.3em;
   text-transform: uppercase;
@@ -139,107 +134,81 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 20px;
   width: 100%;
   max-width: 900px;
   text-align: center;
   padding: 20px;
 }
 
-/* Phrase — subtle background text */
-#lyric-phrase {
-  font-size: clamp(0.9rem, 2.5vw, 1.4rem);
-  color: rgba(255, 255, 255, 0.2);
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  min-height: 2em;
-  transition: opacity 0.3s;
+/* Hide char and word — phrase only mode */
+#lyric-char,
+#lyric-word {
+  display: none;
 }
 
-/* Word — mid-size animated text */
-#lyric-word {
-  font-size: clamp(2rem, 6vw, 4rem);
-  font-weight: 900;
+/* Phrase — the star of the show */
+#lyric-phrase {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: clamp(2rem, 6vw, 5rem);
+  line-height: 1.4;
   color: var(--white);
   text-shadow:
-    0 0 15px rgba(136, 255, 68, 0.9),
-    0 0 40px rgba(136, 255, 68, 0.4);
-  min-height: 1.3em;
-  transition: color 0.2s;
-}
-
-/* Char — the currently-sung character, huge */
-#lyric-char {
-  font-family: 'Black Han Sans', sans-serif;
-  font-size: clamp(4rem, 18vw, 12rem);
-  line-height: 1;
-  color: var(--teal);
-  text-shadow:
-    0 0 30px rgba(0, 255, 204, 1),
-    0 0 80px rgba(0, 255, 204, 0.5),
-    0 0 120px rgba(0, 255, 204, 0.2);
-  min-height: 1.1em;
-  position: relative;
-}
-
-.char-pop {
-  animation: charPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-}
-
-@keyframes charPop {
-  from { transform: scale(0.4) rotate(-8deg); opacity: 0; }
-  to   { transform: scale(1) rotate(0deg);    opacity: 1; }
-}
-
-.word-slide {
-  animation: wordSlide 0.3s ease-out forwards;
-}
-
-@keyframes wordSlide {
-  from { transform: translateY(20px); opacity: 0; }
-  to   { transform: translateY(0);    opacity: 1; }
+    0 0 20px rgba(57, 197, 187, 0.9),
+    0 0 50px rgba(57, 197, 187, 0.5),
+    0 0 80px rgba(255, 105, 180, 0.3),
+    0 3px 8px rgba(0, 0, 0, 0.15);
+  letter-spacing: 0.08em;
+  min-height: 1.4em;
 }
 
 .phrase-fade {
-  animation: phraseFade 0.4s ease-out forwards;
+  animation: phraseFade 0.5s cubic-bezier(0.34, 1.3, 0.64, 1) forwards;
 }
 
 @keyframes phraseFade {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* --- Controls --- */
 #controls {
   width: 100%;
-  max-width: 600px;
+  max-width: 500px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 }
 
 #controls button {
   font-family: 'Black Han Sans', sans-serif;
   font-size: 1rem;
   letter-spacing: 0.2em;
-  padding: 12px 40px;
-  border: 2px solid var(--teal);
-  background: transparent;
-  color: var(--teal);
+  padding: 11px 40px;
+  border: 2px solid var(--miku-teal);
+  background: rgba(255, 255, 255, 0.3);
+  color: var(--miku-teal);
   cursor: pointer;
-  border-radius: 4px;
-  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  border-radius: 50px;
+  backdrop-filter: blur(8px);
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s, transform 0.1s;
 }
 
 #controls button:hover:not(:disabled) {
-  background: var(--teal);
-  color: var(--dark);
-  box-shadow: 0 0 20px rgba(0, 255, 204, 0.6);
+  background: var(--miku-teal);
+  color: var(--white);
+  box-shadow: 0 0 24px rgba(57, 197, 187, 0.6);
+  transform: scale(1.04);
 }
 
 #controls button:disabled {
-  opacity: 0.3;
+  opacity: 0.35;
   cursor: not-allowed;
 }
 
@@ -253,24 +222,24 @@ html, body {
 
 #seek-bar {
   width: 100%;
-  height: 4px;
-  background: rgba(255,255,255,0.15);
-  border-radius: 2px;
+  height: 5px;
+  background: rgba(57, 197, 187, 0.2);
+  border-radius: 3px;
   overflow: hidden;
 }
 
 #seek-fill {
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, var(--teal), var(--pink));
-  border-radius: 2px;
+  background: linear-gradient(90deg, var(--miku-teal), var(--miku-pink));
+  border-radius: 3px;
   transition: width 0.1s linear;
 }
 
 #time-display {
-  font-size: 0.75rem;
-  color: rgba(255,255,255,0.4);
-  letter-spacing: 0.1em;
+  font-size: 0.72rem;
+  color: rgba(57, 197, 187, 0.7);
+  letter-spacing: 0.12em;
 }
 
 /* --- Loading overlay --- */
@@ -278,13 +247,13 @@ html, body {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: var(--dark);
+  background: linear-gradient(135deg, #b2f0ed, #ffd6eb);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 20px;
-  transition: opacity 0.6s ease;
+  transition: opacity 0.8s ease;
 }
 
 #loading.hidden {
@@ -294,7 +263,7 @@ html, body {
 
 #loading-icon {
   font-size: 3rem;
-  color: var(--teal);
+  color: var(--miku-teal);
   animation: spin 1s linear infinite;
 }
 
@@ -305,9 +274,9 @@ html, body {
 
 #loading-text {
   font-family: 'Black Han Sans', sans-serif;
-  font-size: 1.2rem;
-  letter-spacing: 0.3em;
-  color: rgba(255,255,255,0.6);
+  font-size: 1.1rem;
+  letter-spacing: 0.25em;
+  color: var(--miku-teal);
 }
 
 /* --- Beat flash overlay --- */
@@ -317,13 +286,13 @@ html, body {
   z-index: 3;
   pointer-events: none;
   background: radial-gradient(ellipse at center,
-    rgba(0, 255, 204, 0.08) 0%,
+    rgba(255, 105, 180, 0.12) 0%,
     transparent 70%);
   opacity: 0;
 }
 
 #beat-flash.flash {
-  animation: beatFlash 0.2s ease-out forwards;
+  animation: beatFlash 0.25s ease-out forwards;
 }
 
 @keyframes beatFlash {
