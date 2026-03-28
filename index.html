@@ -34,57 +34,14 @@
     <div id="notes-field"></div>
     <div id="win-overlay">
       <div id="win-text">🎉 Let's Go! 🎉</div>
-      <div id="win-sub">Get ready for the quiz!</div>
+      <div id="win-sub">Level 1 is starting...</div>
     </div>
   </div>
 
-  <!-- ══ QUIZ SCREEN ══ -->
-  <div id="quiz-screen" class="hidden">
+  <!-- ══ LEVEL 1 SCREEN ══ -->
+  <div id="level1-screen" class="hidden">
 
-    <div id="quiz-header">
-      <div id="quiz-title">⭐ Miku Quiz! ⭐</div>
-      <div id="quiz-subtitle">Answer correctly for bonus points!</div>
-      <div id="quiz-progress-wrap">
-        <div id="quiz-progress-fill"></div>
-      </div>
-      <div id="quiz-progress-label">Question <span id="quiz-q-num">1</span> of 4</div>
-    </div>
-
-    <div id="quiz-main">
-      <div id="quiz-miku-wrap">
-        <img id="quiz-miku" src="miku_image.png" alt="Miku"/>
-      </div>
-      <div id="quiz-question-wrap">
-        <div id="quiz-question"></div>
-        <div id="quiz-answers"></div>
-        <div id="quiz-feedback"></div>
-      </div>
-    </div>
-
-    <div id="quiz-bonus-display">
-      <div id="quiz-bonus-label">QUIZ BONUS SO FAR</div>
-      <div id="quiz-bonus-score">0</div>
-    </div>
-
-  </div>
-
-  <!-- ══ QUIZ RESULTS SCREEN ══ -->
-  <div id="quiz-results" class="hidden">
-    <div id="results-title">Quiz Complete!</div>
-    <div id="results-score-wrap">
-      <div id="results-correct"></div>
-      <div id="results-bonus"></div>
-    </div>
-    <div id="results-miku-wrap">
-      <img id="results-miku" src="miku_image.png" alt="Miku"/>
-    </div>
-    <div id="results-message"></div>
-    <div id="results-countdown">Starting game in <span id="results-timer">3</span>...</div>
-  </div>
-
-  <!-- ══ PLAYER SCREEN ══ -->
-  <div id="app" class="hidden">
-
+    <!-- Score HUD -->
     <div id="hud">
       <div id="score-wrap">
         <div id="score-label">SCORE</div>
@@ -95,39 +52,51 @@
         <div id="combo">0</div>
         <div id="combo-x">x</div>
       </div>
+      <div id="level-badge">LEVEL 1</div>
     </div>
 
+    <!-- Falling game items -->
     <div id="game-notes-field"></div>
 
-    <div id="miku-corner">
-      <img id="miku-img" src="miku_alien.png" alt="Miku"/>
-    </div>
+    <!-- Two column layout: quiz left, Miku right -->
+    <div id="level1-main">
 
-    <div id="header">
-      <div id="song-title">Green Lights Serenade</div>
-      <div id="song-artist">Hatsune Miku / Omoi</div>
-    </div>
-
-    <div id="main-content">
-      <div id="lyric-stage">
-        <div id="lyric-char"></div>
-        <div id="lyric-word"></div>
-        <div id="lyric-phrase"></div>
-        <div id="lyric-translation"></div>
+      <!-- LEFT: Quiz panel -->
+      <div id="quiz-panel">
+        <div id="quiz-header-text">⭐ Miku Quiz ⭐</div>
+        <div id="quiz-progress-wrap">
+          <div id="quiz-progress-fill"></div>
+        </div>
+        <div id="quiz-q-label">Question <span id="quiz-q-num">1</span> of 4</div>
+        <div id="quiz-question"></div>
+        <div id="quiz-answers"></div>
+        <div id="quiz-feedback"></div>
+        <div id="quiz-bonus-wrap">
+          <span id="quiz-bonus-label">QUIZ BONUS:</span>
+          <span id="quiz-bonus-score">0</span>
+        </div>
+        <!-- shown after all questions done -->
+        <div id="quiz-done-msg" class="hidden">
+          🎉 Quiz complete! Keep catching notes!
+        </div>
       </div>
+
+      <!-- RIGHT: Big alien Miku -->
+      <div id="level1-miku-wrap">
+        <img id="level1-miku" src="miku_alien.png" alt="Alien Miku"/>
+      </div>
+
     </div>
 
+    <!-- Controls bar at bottom -->
     <div id="controls">
-      <div id="control-buttons">
-        <button id="btn-play" disabled>▶ PLAY</button>
-        <button id="btn-stop" disabled>■ STOP</button>
-      </div>
       <div id="seek-container">
         <div id="seek-bar"><div id="seek-fill"></div></div>
         <div id="time-display">0:00 / 0:00</div>
       </div>
     </div>
 
+    <!-- Loading overlay -->
     <div id="loading">
       <div id="loading-icon">⟳</div>
       <div id="loading-text">Loading Green Lights Serenade...</div>
