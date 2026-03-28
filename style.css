@@ -507,3 +507,119 @@ body.level3 #bg {
 
 #beat-flash.flash-l3 { animation:beatFlashL3 0.25s ease-out forwards; }
 @keyframes beatFlashL3 { 0%{background:radial-gradient(ellipse at center,rgba(255,105,180,0.1) 0%,transparent 70%);opacity:1} 100%{opacity:0} }
+
+/* ══════════════════════════════════
+   LEVEL 4 — MIKU PAC RUNNER
+   Miku blue & teal theme
+══════════════════════════════════ */
+body.level4 #bg {
+  background:linear-gradient(135deg,#001a2a,#002a3a,#001520,#002030)!important;
+  animation-duration:8s!important;
+}
+
+#level4-screen {
+  position:fixed;inset:0;z-index:13;
+  display:flex;flex-direction:column;
+  transition:opacity 0.8s ease;
+}
+
+#hud4 {
+  position:fixed;top:0;left:0;right:0;z-index:30;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 20px;
+  background:rgba(0,20,40,0.75);backdrop-filter:blur(8px);
+  border-bottom:1px solid rgba(57,197,187,0.25);gap:12px;
+}
+#level4-badge {
+  font-family:'Black Han Sans',sans-serif;
+  font-size:clamp(0.9rem,2vw,1.2rem);letter-spacing:0.2em;
+  color:#39C5BB;border:2px solid rgba(57,197,187,0.5);
+  border-radius:20px;padding:4px 14px;
+  text-shadow:0 0 12px rgba(57,197,187,0.7);white-space:nowrap;
+}
+#hud4-controls{display:flex;gap:8px;}
+#btn4-play-pause {
+  font-family:'Black Han Sans',sans-serif;font-size:0.8rem;
+  letter-spacing:0.15em;padding:6px 16px;border-radius:20px;cursor:pointer;
+  border:2px solid #39C5BB;background:rgba(57,197,187,0.1);color:#39C5BB;
+  transition:background 0.2s,color 0.2s,box-shadow 0.2s;
+}
+#btn4-play-pause:hover{background:#39C5BB;color:#000;box-shadow:0 0 16px rgba(57,197,187,0.6);}
+#btn4-stop {
+  font-family:'Black Han Sans',sans-serif;font-size:0.8rem;
+  letter-spacing:0.15em;padding:6px 16px;border-radius:20px;cursor:pointer;
+  border:2px solid rgba(255,105,180,0.5);background:rgba(255,105,180,0.1);color:#FF69B4;
+  transition:background 0.2s,color 0.2s;
+}
+#btn4-stop:hover{background:#FF69B4;color:#fff;}
+#score4-wrap,#score4-total-wrap{text-align:right;}
+#score4-label,#score4-total-label{font-family:'Black Han Sans',sans-serif;font-size:0.6rem;letter-spacing:0.2em;}
+#score4-label{color:rgba(57,197,187,0.7);}
+#score4-total-label{color:rgba(255,105,180,0.7);}
+#score4{font-family:'Black Han Sans',sans-serif;font-size:clamp(1.2rem,3vw,1.8rem);color:#39C5BB;text-shadow:0 0 10px rgba(57,197,187,0.6);min-width:60px;text-align:right;}
+#score4-total{font-family:'Black Han Sans',sans-serif;font-size:clamp(1.2rem,3vw,1.8rem);color:#FF69B4;text-shadow:0 0 10px rgba(255,105,180,0.5);min-width:80px;text-align:right;}
+
+#pac-canvas {
+  position:fixed;inset:0;z-index:14;
+  width:100%;height:100%;cursor:pointer;
+}
+
+#pac-instruction {
+  position:fixed;inset:0;z-index:35;
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;transition:opacity 0.4s ease;
+}
+#pac-instruction.hidden{opacity:0;pointer-events:none;}
+#pac-inst-text {
+  font-family:'Black Han Sans',sans-serif;
+  font-size:clamp(1.2rem,4vw,2.5rem);
+  color:#39C5BB;letter-spacing:0.15em;
+  background:rgba(0,20,40,0.7);
+  padding:16px 36px;border-radius:20px;
+  border:2px solid rgba(57,197,187,0.4);
+  backdrop-filter:blur(6px);
+  animation:instPulse 1.5s ease-in-out infinite;
+  text-shadow:0 0 16px rgba(57,197,187,0.7);
+}
+
+#pac-gameover {
+  position:fixed;inset:0;z-index:40;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:20px;
+  background:rgba(0,20,40,0.85);backdrop-filter:blur(10px);
+  transition:opacity 0.5s ease;
+}
+#pac-gameover.hidden{opacity:0;pointer-events:none;}
+#pac-gameover-title {
+  font-family:'Black Han Sans',sans-serif;
+  font-size:clamp(3rem,10vw,7rem);color:#39C5BB;
+  text-shadow:0 0 30px rgba(57,197,187,0.8);
+  animation:winPulse 0.6s ease-in-out infinite alternate;
+}
+#pac-gameover-score {
+  font-family:'Black Han Sans',sans-serif;
+  font-size:clamp(1rem,3vw,2rem);color:#FF69B4;letter-spacing:0.1em;
+}
+#btn-pac-retry {
+  font-family:'Black Han Sans',sans-serif;
+  font-size:clamp(1rem,3vw,1.8rem);letter-spacing:0.2em;
+  padding:14px 50px;border:3px solid #39C5BB;
+  background:rgba(57,197,187,0.15);color:#39C5BB;
+  cursor:pointer;border-radius:50px;
+  transition:background 0.2s,color 0.2s,box-shadow 0.2s,transform 0.1s;
+}
+#btn-pac-retry:hover{background:#39C5BB;color:#000;box-shadow:0 0 30px rgba(57,197,187,0.7);transform:scale(1.05);}
+
+#controls-bar4 {
+  position:fixed;bottom:0;left:0;right:0;z-index:35;
+  padding:8px 20px 10px;
+  background:rgba(0,20,40,0.6);backdrop-filter:blur(8px);
+  border-top:1px solid rgba(57,197,187,0.15);
+  display:flex;flex-direction:column;gap:4px;align-items:center;
+}
+#seek-bar4{width:100%;height:5px;background:rgba(57,197,187,0.15);border-radius:3px;overflow:hidden;}
+#seek-fill4{height:100%;width:0%;background:linear-gradient(90deg,#39C5BB,#FF69B4);border-radius:3px;transition:width 0.1s linear;}
+#time-display4{font-size:0.7rem;color:rgba(57,197,187,0.5);letter-spacing:0.12em;}
+
+#beat-flash.flash-l4{animation:beatFlashL4 0.25s ease-out forwards;}
+@keyframes beatFlashL4{0%{background:radial-gradient(ellipse at center,rgba(57,197,187,0.1) 0%,transparent 70%);opacity:1}100%{opacity:0}}

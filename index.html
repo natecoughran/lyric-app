@@ -170,6 +170,43 @@
     </div>
   </div>
 
+
+  <!-- ══ LEVEL 4 ══ -->
+  <div id="level4-screen" class="hidden">
+    <div id="hud4">
+      <div id="level4-badge">LEVEL 4</div>
+      <div id="hud4-controls">
+        <button id="btn4-play-pause">⏸ PAUSE</button>
+        <button id="btn4-stop">■ STOP</button>
+      </div>
+      <div id="score4-wrap">
+        <div id="score4-label">NOTES EATEN</div>
+        <div id="score4">0</div>
+      </div>
+      <div id="score4-total-wrap">
+        <div id="score4-total-label">TOTAL SCORE</div>
+        <div id="score4-total">0</div>
+      </div>
+    </div>
+
+    <canvas id="pac-canvas"></canvas>
+
+    <div id="pac-instruction">
+      <div id="pac-inst-text">Press ↑ ↓ to move Miku!</div>
+    </div>
+
+    <div id="pac-gameover" class="hidden">
+      <div id="pac-gameover-title">Song Complete! 🎵</div>
+      <div id="pac-gameover-score">Notes eaten: <span id="pac-final-score">0</span></div>
+      <button id="btn-pac-retry">Play Again!</button>
+    </div>
+
+    <div id="controls-bar4">
+      <div id="seek-bar4"><div id="seek-fill4"></div></div>
+      <div id="time-display4">0:00 / 0:00</div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>

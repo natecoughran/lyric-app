@@ -57,6 +57,20 @@ const flappyFinalLeeks = document.getElementById('flappy-final-leeks');
 const btnFlappyRetry = document.getElementById('btn-flappy-retry');
 const score3El       = document.getElementById('score3');
 const score3TotalEl  = document.getElementById('score3-total');
+// Level 4
+const level4Screen   = document.getElementById('level4-screen');
+const pacCanvas      = document.getElementById('pac-canvas');
+const pacCtx         = pacCanvas ? pacCanvas.getContext('2d') : null;
+const score4El       = document.getElementById('score4');
+const score4TotalEl  = document.getElementById('score4-total');
+const btn4PlayPause  = document.getElementById('btn4-play-pause');
+const btn4Stop       = document.getElementById('btn4-stop');
+const seekFill4      = document.getElementById('seek-fill4');
+const timeDisplay4   = document.getElementById('time-display4');
+const pac4Inst       = document.getElementById('pac-instruction');
+const pac4Gameover   = document.getElementById('pac-gameover');
+const pac4FinalScore = document.getElementById('pac-final-score');
+const btnPacRetry    = document.getElementById('btn-pac-retry');
 const btn3PlayPause  = document.getElementById('btn3-play-pause');
 const btn3Stop       = document.getElementById('btn3-stop');
 const seekFill3      = document.getElementById('seek-fill3');
@@ -185,7 +199,7 @@ const ARROW_TO_KEY = { '↑':'ArrowUp','↓':'ArrowDown','←':'ArrowLeft','→'
 
 let currentArrow    = null;
 let arrowShownAt    = null;
-let arrowWindow     = 600; // ms to hit the arrow
+let arrowWindow     = 1000; // ms to hit the arrow
 let arrowTimerHandle = null;
 let arrowTimerAnimHandle = null;
 let l2Active        = false;
@@ -196,6 +210,7 @@ let l2StartTime     = null;
 // ══════════════════════════════════
 
 let l3Active      = false;
+let l3StartTime   = null;
 let flappyRunning = false;
 let flappyPaused  = false;
 let flappyRaf     = null;
@@ -426,6 +441,254 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
+
+// ══════════════════════════════════
+//   LEVEL 4 — MIKU PAC-MAN RUNNER
+// ══════════════════════════════════
+
+let l4Active      = false;
+let pacRunning    = false;
+let pacPaused     = false;
+let pacRaf        = null;
+let notesEaten    = 0;
+let score4        = 0;
+const PAC_SPEED   = 3.8;
+const NOTE_SPEED  = 3.0;
+const LEEK4_SPEED = 4.2;
+
+const mikuPacImg = new Image();
+mikuPacImg.src = 'miku_pac.png';
+
+let pac = { x:0, y:0, vy:0, w:72, h:72, targetY:0 };
+let notes4  = [];
+let leeks4  = [];
+let lastNote4Time = 0;
+let lastLeek4Time = 0;
+const NOTE_INTERVAL4 = 900;
+const LEEK_INTERVAL4 = 1800;
+const PAC_STEP = 6; // pixels per key press
+
+function initPac() {
+  pac.x = 110;
+  pac.y = pacCanvas.height * 0.5;
+  pac.targetY = pac.y;
+  notes4  = [];
+  leeks4  = [];
+  notesEaten = 0;
+  score4  = 0;
+  score4El.textContent = '0';
+  lastNote4Time = 0;
+  lastLeek4Time = 0;
+  pac4Gameover.classList.add('hidden');
+  pac4Inst.classList.remove('hidden');
+  pacRunning = false;
+  pacPaused  = false;
+}
+
+function resizePac() {
+  pacCanvas.width  = window.innerWidth;
+  pacCanvas.height = window.innerHeight;
+  if (!pacRunning) initPac();
+}
+
+function startPac() {
+  if (pacRunning) return;
+  pacRunning = true;
+  pac4Inst.classList.add('hidden');
+  lastNote4Time = performance.now();
+  lastLeek4Time = performance.now();
+  pacLoop(performance.now());
+}
+
+function movePacUp() {
+  if (!l4Active || !pacRunning || pacPaused) return;
+  pac.targetY = Math.max(60, pac.targetY - pacCanvas.height * 0.14);
+}
+function movePacDown() {
+  if (!l4Active || !pacRunning || pacPaused) return;
+  pac.targetY = Math.min(pacCanvas.height - 80, pac.targetY + pacCanvas.height * 0.14);
+}
+
+function pacLoop(now) {
+  if (!l4Active || pacPaused) return;
+  pacRaf = requestAnimationFrame(pacLoop);
+
+  const W = pacCanvas.width;
+  const H = pacCanvas.height;
+
+  // Smooth vertical movement toward target
+  pac.y += (pac.targetY - pac.y) * 0.18;
+
+  // Spawn notes
+  if (now - lastNote4Time > NOTE_INTERVAL4) {
+    const laneCount = 5;
+    const laneH = (H - 120) / laneCount;
+    const lane = Math.floor(Math.random() * laneCount);
+    notes4.push({
+      x: W + 30,
+      y: 60 + lane * laneH + laneH * 0.5,
+      r: 18,
+      symbol: ['♪','♫','♩','♬'][Math.floor(Math.random()*4)],
+      color: ['#39C5BB','#00FFFF','#FF69B4','#ffffff','#aaddff'][Math.floor(Math.random()*5)],
+      eaten: false
+    });
+    lastNote4Time = now;
+  }
+
+  // Spawn leeks
+  if (now - lastLeek4Time > LEEK_INTERVAL4) {
+    const laneCount = 4;
+    const laneH = (H - 120) / laneCount;
+    // sometimes spawn 2 leeks with a gap
+    const lane1 = Math.floor(Math.random() * laneCount);
+    leeks4.push({ x: W + 30, y: 60 + lane1 * laneH + laneH * 0.3, w: 44, h: 80 });
+    if (Math.random() > 0.5) {
+      const lane2 = (lane1 + 2) % laneCount;
+      leeks4.push({ x: W + 30, y: 60 + lane2 * laneH + laneH * 0.3, w: 44, h: 80 });
+    }
+    lastLeek4Time = now;
+  }
+
+  // Move notes & leeks
+  notes4.forEach(n => n.x -= NOTE_SPEED);
+  leeks4.forEach(l => l.x -= LEEK4_SPEED);
+  notes4 = notes4.filter(n => n.x > -40);
+  leeks4 = leeks4.filter(l => l.x > -60);
+
+  // Collisions: notes
+  const px = pac.x + pac.w * 0.2, py = pac.y + pac.h * 0.2;
+  const pw = pac.w * 0.6, ph = pac.h * 0.6;
+  for (const n of notes4) {
+    if (!n.eaten && Math.abs((px + pw/2) - n.x) < n.r + pw/2 && Math.abs((py + ph/2) - n.y) < n.r + ph/2) {
+      n.eaten = true;
+      notesEaten++;
+      score4 += 50;
+      score4El.textContent = score4.toLocaleString();
+      score4TotalEl.textContent = (score + score2 + leeksDodged * 50 + score4).toLocaleString();
+      for (let i = 0; i < 5; i++) spawnParticleAt(pac.x + pac.w, pac.y + pac.h/2, true);
+    }
+  }
+  notes4 = notes4.filter(n => !n.eaten);
+
+  // Collisions: leeks (lose 100 points, flash red)
+  for (const lk of leeks4) {
+    if (lk.hit) continue;
+    if (px < lk.x + lk.w && px + pw > lk.x && py < lk.y + lk.h && py + ph > lk.y) {
+      lk.hit = true;
+      score4 -= 100;
+      if (score4 < 0) score4 = 0;
+      score4El.textContent = score4.toLocaleString();
+      score4TotalEl.textContent = (score + score2 + leeksDodged * 50 + score4).toLocaleString();
+      const flash = document.createElement('div');
+      flash.className = 'penalty-flash';
+      document.body.appendChild(flash);
+      flash.addEventListener('animationend', () => flash.remove());
+    }
+  }
+  leeks4 = leeks4.filter(l => !l.hit);
+
+  drawPac();
+}
+
+function drawPac() {
+  const W = pacCanvas.width;
+  const H = pacCanvas.height;
+  pacCtx.clearRect(0, 0, W, H);
+
+  // Subtle lane guides
+  pacCtx.strokeStyle = 'rgba(57,197,187,0.06)';
+  pacCtx.lineWidth = 1;
+  const laneCount = 5;
+  const laneH = (H - 120) / laneCount;
+  for (let i = 1; i < laneCount; i++) {
+    pacCtx.beginPath();
+    pacCtx.setLineDash([8, 12]);
+    pacCtx.moveTo(0, 60 + i * laneH);
+    pacCtx.lineTo(W, 60 + i * laneH);
+    pacCtx.stroke();
+  }
+  pacCtx.setLineDash([]);
+
+  // Draw notes
+  for (const n of notes4) {
+    pacCtx.save();
+    pacCtx.font = `${n.r * 2}px serif`;
+    pacCtx.fillStyle = n.color;
+    pacCtx.shadowColor = n.color;
+    pacCtx.shadowBlur = 12;
+    pacCtx.textAlign = 'center';
+    pacCtx.textBaseline = 'middle';
+    pacCtx.fillText(n.symbol, n.x, n.y);
+    pacCtx.restore();
+  }
+
+  // Draw leeks (simple SVG-style)
+  for (const lk of leeks4) {
+    pacCtx.save();
+    // stem
+    pacCtx.fillStyle = '#e8e0c0';
+    pacCtx.strokeStyle = '#c8b88a';
+    pacCtx.lineWidth = 1.5;
+    pacCtx.beginPath();
+    pacCtx.roundRect(lk.x + 8, lk.y + 30, 28, lk.h - 30, 4);
+    pacCtx.fill(); pacCtx.stroke();
+    // bulb
+    pacCtx.fillStyle = '#f5f0e8';
+    pacCtx.beginPath();
+    pacCtx.ellipse(lk.x + 22, lk.y + 32, 16, 18, 0, 0, Math.PI*2);
+    pacCtx.fill(); pacCtx.stroke();
+    // leaves
+    pacCtx.strokeStyle = '#5a9a3a'; pacCtx.lineWidth = 6; pacCtx.lineCap = 'round';
+    pacCtx.beginPath(); pacCtx.moveTo(lk.x+16, lk.y+16); pacCtx.quadraticCurveTo(lk.x+4, lk.y-10, lk.x+8, lk.y-28); pacCtx.stroke();
+    pacCtx.strokeStyle = '#6ab04a'; pacCtx.lineWidth = 5;
+    pacCtx.beginPath(); pacCtx.moveTo(lk.x+26, lk.y+16); pacCtx.quadraticCurveTo(lk.x+38, lk.y-8, lk.x+34, lk.y-26); pacCtx.stroke();
+    pacCtx.restore();
+  }
+
+  // Draw Miku pac
+  if (mikuPacImg.complete && mikuPacImg.naturalWidth > 0) {
+    pacCtx.save();
+    // Slight bob animation
+    const bob = Math.sin(performance.now() * 0.006) * 3;
+    pacCtx.drawImage(mikuPacImg, pac.x, pac.y + bob, pac.w, pac.h);
+    pacCtx.restore();
+  } else {
+    pacCtx.fillStyle = '#39C5BB';
+    pacCtx.beginPath();
+    pacCtx.arc(pac.x + pac.w/2, pac.y + pac.h/2, 30, 0, Math.PI*2);
+    pacCtx.fill();
+  }
+
+  // Floor & ceiling lines
+  pacCtx.strokeStyle = 'rgba(57,197,187,0.15)';
+  pacCtx.lineWidth = 2;
+  pacCtx.beginPath(); pacCtx.moveTo(0, 58); pacCtx.lineTo(W, 58); pacCtx.stroke();
+  pacCtx.beginPath(); pacCtx.moveTo(0, H - 42); pacCtx.lineTo(W, H - 42); pacCtx.stroke();
+}
+
+function goToLevel4() {
+  if (currentLevel === 4) return;
+  transitionText.textContent = '🎵 Level 4 🎵';
+  transitionSub.textContent  = 'Eat the notes! Dodge the leeks!';
+  levelTransition.classList.remove('hidden');
+  setTimeout(() => {
+    levelTransition.classList.add('hidden');
+    level3Screen.classList.add('hidden');
+    level4Screen.classList.remove('hidden');
+    document.body.classList.remove('level3');
+    document.body.classList.add('level4');
+    currentLevel = 4;
+    l4Active = true;
+    l3Active = false;
+    cancelAnimationFrame(flappyRaf);
+    resizePac();
+    drawPac();
+  }, 2800);
+}
+
+window.addEventListener('resize', () => { if (currentLevel === 4) resizePac(); });
+
+
 function goToLevel3() {
   transitionText.textContent = '🧅 Level 3 🧅';
   transitionSub.textContent  = 'Flappy Miku! Dodge the leeks!';
@@ -439,6 +702,7 @@ function goToLevel3() {
     currentLevel = 3;
     l3Active = true;
     l2Active = false;
+    l3StartTime = performance.now();
     resizeFlappy();
     drawFlappy();
   }, 2800);
@@ -582,6 +846,10 @@ document.addEventListener('keydown', (e) => {
   if (currentLevel === 3 && e.key === ' ') {
     e.preventDefault();
     flapMiku();
+  }
+  if (currentLevel === 4) {
+    if (e.key === 'ArrowUp')   { e.preventDefault(); movePacUp();   if (!pacRunning) startPac(); }
+    if (e.key === 'ArrowDown') { e.preventDefault(); movePacDown(); if (!pacRunning) startPac(); }
   }
 });
 
@@ -750,6 +1018,9 @@ player.addListener({
       } else if (currentLevel === 3) {
         seekFill3.style.width = pct;
         timeDisplay3.textContent = formatTime(position) + ' / ' + formatTime(len);
+      } else if (currentLevel === 4) {
+        seekFill4.style.width = pct;
+        timeDisplay4.textContent = formatTime(position) + ' / ' + formatTime(len);
       }
     }
     if (Math.random() < 0.08) spawnParticle(false);
@@ -759,11 +1030,16 @@ player.addListener({
       l2StartTime = null;
       goToLevel3();
     }
+    // Level 3 runs for 30 seconds then transitions to Level 4
+    if (currentLevel === 3 && l3StartTime && (performance.now() - l3StartTime) >= 30000) {
+      l3StartTime = null;
+      goToLevel4();
+    }
     const beat = player.findBeat(position);
     if (beat && Math.abs(position - beat.startTime) < 30) {
       beatFlash.className = '';
       void beatFlash.offsetWidth;
-      beatFlash.className = currentLevel === 3 ? 'flash-l3' : currentLevel === 2 ? 'flash-l2' : 'flash-l1';
+      beatFlash.className = currentLevel === 4 ? 'flash-l4' : currentLevel === 3 ? 'flash-l3' : currentLevel === 2 ? 'flash-l2' : 'flash-l1';
       if (currentLevel === 1) { l1Miku.classList.add('beat'); setTimeout(() => l1Miku.classList.remove('beat'), 200); }
     }
   },
@@ -772,18 +1048,21 @@ player.addListener({
     if (currentLevel === 1) btnPlayPause.textContent = '⏸ PAUSE';
     if (currentLevel === 2) btn2PlayPause.textContent = '⏸ PAUSE';
     if (currentLevel === 3) btn3PlayPause.textContent = '⏸ PAUSE';
+    if (currentLevel === 4) btn4PlayPause.textContent = '⏸ PAUSE';
   },
   onPause() {
     if (currentLevel === 1) btnPlayPause.textContent = '▶ PLAY';
     if (currentLevel === 2) { btn2PlayPause.textContent = '▶ PLAY'; l2Active = false; }
     if (currentLevel === 3) { btn3PlayPause.textContent = '▶ PLAY'; flappyPaused = true; cancelAnimationFrame(flappyRaf); }
+    if (currentLevel === 4) { btn4PlayPause.textContent = '▶ PLAY'; pacPaused = true; cancelAnimationFrame(pacRaf); }
   },
   onStop() {
     if (currentLevel === 1) btnPlayPause.textContent = '▶ PLAY';
     if (currentLevel === 2) { btn2PlayPause.textContent = '▶ PLAY'; l2Active = false; currentArrow = null; }
     if (currentLevel === 3) { btn3PlayPause.textContent = '▶ PLAY'; l3Active = false; flappyPaused = true; cancelAnimationFrame(flappyRaf); }
-    seekFill.style.width = '0%'; seekFill2.style.width = '0%'; seekFill3.style.width = '0%';
-    const totalScore = score + score2 + leeksDodged * 50;
+    if (currentLevel === 4) { btn4PlayPause.textContent = '▶ PLAY'; l4Active = false; pacPaused = true; cancelAnimationFrame(pacRaf); }
+    seekFill.style.width = '0%'; seekFill2.style.width = '0%'; seekFill3.style.width = '0%'; if (seekFill4) seekFill4.style.width = '0%';
+    const totalScore = score + score2 + leeksDodged * 50 + score4;
     if (totalScore !== 0) {
       const final = document.createElement('div');
       final.id = 'final-score';
@@ -813,6 +1092,13 @@ btn3PlayPause.addEventListener('click', () => {
 });
 btn3Stop.addEventListener('click', () => player.requestStop());
 btnFlappyRetry.addEventListener('click', () => { initFlappy(); drawFlappy(); });
+if (btn4PlayPause) btn4PlayPause.addEventListener('click', () => {
+  if (player.isPlaying) { player.requestPause(); pacPaused = true; cancelAnimationFrame(pacRaf); }
+  else { player.requestPlay(); pacPaused = false; if (pacRunning && l4Active) pacLoop(performance.now()); }
+});
+if (btn4Stop) btn4Stop.addEventListener('click', () => player.requestStop());
+if (btnPacRetry) btnPacRetry.addEventListener('click', () => { initPac(); drawPac(); });
+if (pacCanvas) pacCanvas.addEventListener('click', () => { if (!pacRunning) startPac(); });
 flappyCanvas.addEventListener('click', () => flapMiku());
 
 function formatTime(ms) {
