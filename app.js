@@ -322,8 +322,6 @@ function initFlappy() {
   fairy.vy = 0;
   fairy.alive = true;
   leeks = [];
-  rings = [];
-  lastRingTime = 0;
   leeksDodged = 0;
   lastLeekTime = 0;
   score3El.textContent = '0';
@@ -392,7 +390,7 @@ function flappyLoop(now) {
     const dy = (fairy.y + fairy.h/2) - rg.y;
     if (Math.sqrt(dx*dx + dy*dy) < rg.r + 20) {
       rg.collected = true;
-      leeksDodged += 4; // +4 bonus leeks = +200 pts equiv
+      leeksDodged += 4;
       score3El.textContent = leeksDodged;
       score3TotalEl.textContent = (score + score2 + leeksDodged * 50).toLocaleString();
       for (let i = 0; i < 12; i++) spawnParticleAt(rg.x, rg.y, true);
@@ -482,13 +480,11 @@ function drawFlappy() {
     flappyCtx.beginPath();
     flappyCtx.arc(rg.x, rg.y, rg.r + pulse, 0, Math.PI * 2);
     flappyCtx.stroke();
-    // Inner glow ring
     flappyCtx.strokeStyle = 'rgba(255,220,0,0.3)';
     flappyCtx.lineWidth = 12;
     flappyCtx.beginPath();
     flappyCtx.arc(rg.x, rg.y, rg.r + pulse, 0, Math.PI * 2);
     flappyCtx.stroke();
-    // Star in center
     flappyCtx.fillStyle = '#FFD700';
     flappyCtx.font = '22px serif';
     flappyCtx.textAlign = 'center';
@@ -635,8 +631,8 @@ let pacRaf        = null;
 let notesEaten    = 0;
 let score4        = 0;
 const PAC_SPEED   = 3.8;
-const NOTE_SPEED  = 3.0;
-const LEEK4_SPEED = 4.2;
+const NOTE_SPEED  = 4.5;
+const LEEK4_SPEED = 6.0;
 
 const mikuPacImg = new Image();
 mikuPacImg.src = 'miku_pac.png';
@@ -646,8 +642,8 @@ let notes4  = [];
 let leeks4  = [];
 let lastNote4Time = 0;
 let lastLeek4Time = 0;
-const NOTE_INTERVAL4 = 900;
-const LEEK_INTERVAL4 = 1800;
+const NOTE_INTERVAL4 = 650;
+const LEEK_INTERVAL4 = 1300;
 let leekWaveIndex4  = 0;
 let magnets4        = [];
 let magnetActive    = false;
