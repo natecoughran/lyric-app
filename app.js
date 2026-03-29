@@ -721,6 +721,10 @@ function drawPac() {
 
 function goToLevel4() {
   if (currentLevel === 4) return;
+  // Stop level 3 immediately so no collisions happen during transition
+  l3Active = false;
+  flappyPaused = true;
+  cancelAnimationFrame(flappyRaf);
   transitionText.textContent = '🎵 Level 4 🎵';
   transitionSub.textContent  = 'Eat the notes! Dodge the leeks!';
   levelTransition.classList.remove('hidden');
@@ -744,6 +748,13 @@ window.addEventListener('resize', () => { if (currentLevel === 4) resizePac(); }
 
 
 function goToLevel3() {
+  // Stop level 2 immediately so no points can be lost during transition
+  l2Active = false;
+  currentArrow = null;
+  clearTimeout(arrowTimerHandle);
+  arrowTarget.textContent = '';
+  arrowTimerBar.style.transition = 'none';
+  arrowTimerBar.style.transform = 'scaleX(0)';
   transitionText.textContent = '🧅 Level 3 🧅';
   transitionSub.textContent  = 'Flappy Miku! Dodge the leeks!';
   levelTransition.classList.remove('hidden');
