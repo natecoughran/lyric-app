@@ -301,9 +301,9 @@ let flappyRaf     = null;
 let leeksDodged   = 0;
 const GRAVITY     = 0.45;
 const FLAP_FORCE  = -8.5;
-const LEEK_SPEED  = 3.2;
+const LEEK_SPEED  = 4.8;
 const LEEK_GAP    = 238;
-const LEEK_INTERVAL = 1700; // ms between leeks
+const LEEK_INTERVAL = 2400; // ms between leeks -- more spread out
 let lastLeekTime  = 0;
 
 // Miku fairy image
