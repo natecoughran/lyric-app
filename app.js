@@ -324,7 +324,7 @@ function initFlappy() {
   leeks = [];
   rings = [];
   lastRingTime = performance.now();
-  lastLeekTime = -(LEEK_INTERVAL * 2); // first leek appears almost immediately
+  lastLeekTime = -(LEEK_INTERVAL * 10); // first leek appears instantly
   leeksDodged = 0;
   score3El.textContent = '0';
   flappyGameover.classList.add('hidden');
@@ -343,7 +343,7 @@ function startFlappy() {
   if (flappyRunning) return;
   flappyRunning = true;
   flappyInst.classList.add('hidden');
-  lastLeekTime = performance.now() - (LEEK_INTERVAL * 1.8); // first leek appears very quickly
+  lastLeekTime = performance.now() - (LEEK_INTERVAL * 10); // first leek appears instantly
   lastRingTime = performance.now();
   flappyLoop(performance.now());
 }
@@ -528,49 +528,94 @@ function drawFlappy() {
 }
 
 function drawLeek(x, gapY) {
-  const W = flappyCanvas.width;
   const H = flappyCanvas.height;
-  const lw = 52; // leek width
+  const cx = x + 26; // center x of mic
 
   flappyCtx.save();
 
-  // ── TOP LEEK (upside down, roots at top, leaves pointing down into gap) ──
-  // Stem
-  flappyCtx.fillStyle = '#e8e0c0';
-  flappyCtx.strokeStyle = '#c8b88a';
-  flappyCtx.lineWidth = 1.5;
-  roundRect(flappyCtx, x + 10, 0, 32, gapY - 30, 4);
-  flappyCtx.fill(); flappyCtx.stroke();
-  // Bulb at bottom of top leek
-  flappyCtx.fillStyle = '#f5f0e8';
-  flappyCtx.beginPath();
-  flappyCtx.ellipse(x + lw/2, gapY - 18, 18, 20, 0, 0, Math.PI*2);
-  flappyCtx.fill(); flappyCtx.stroke();
-  // Green leaves fanning down into gap
-  flappyCtx.strokeStyle = '#5a9a3a'; flappyCtx.lineWidth = 7; flappyCtx.lineCap = 'round';
-  flappyCtx.beginPath(); flappyCtx.moveTo(x+lw/2-6, gapY-10); flappyCtx.quadraticCurveTo(x+lw/2-18, gapY+10, x+lw/2-14, gapY+28); flappyCtx.stroke();
-  flappyCtx.strokeStyle = '#6ab04a'; flappyCtx.lineWidth = 6;
-  flappyCtx.beginPath(); flappyCtx.moveTo(x+lw/2+4, gapY-10); flappyCtx.quadraticCurveTo(x+lw/2+16, gapY+8, x+lw/2+12, gapY+26); flappyCtx.stroke();
-  flappyCtx.strokeStyle = '#7acc5a'; flappyCtx.lineWidth = 5;
-  flappyCtx.beginPath(); flappyCtx.moveTo(x+lw/2, gapY-10); flappyCtx.quadraticCurveTo(x+lw/2, gapY+14, x+lw/2-4, gapY+30); flappyCtx.stroke();
+  // ── TOP MIC (upside down, head pointing down into gap) ──
+  drawMic(cx, 0, gapY, true);
 
-  // ── BOTTOM LEEK (right way up, roots at bottom) ──
-  const bottomTop = gapY + LEEK_GAP;
-  // Green leaves at top
-  flappyCtx.strokeStyle = '#5a9a3a'; flappyCtx.lineWidth = 7; flappyCtx.lineCap = 'round';
-  flappyCtx.beginPath(); flappyCtx.moveTo(x+lw/2-6, bottomTop+10); flappyCtx.quadraticCurveTo(x+lw/2-20, bottomTop-20, x+lw/2-14, bottomTop-45); flappyCtx.stroke();
-  flappyCtx.strokeStyle = '#6ab04a'; flappyCtx.lineWidth = 6;
-  flappyCtx.beginPath(); flappyCtx.moveTo(x+lw/2+4, bottomTop+10); flappyCtx.quadraticCurveTo(x+lw/2+18, bottomTop-18, x+lw/2+12, bottomTop-42); flappyCtx.stroke();
-  flappyCtx.strokeStyle = '#7acc5a'; flappyCtx.lineWidth = 5;
-  flappyCtx.beginPath(); flappyCtx.moveTo(x+lw/2, bottomTop+10); flappyCtx.quadraticCurveTo(x+lw/2+2, bottomTop-22, x+lw/2-2, bottomTop-48); flappyCtx.stroke();
-  // Stem
-  flappyCtx.fillStyle = '#e8e0c0'; flappyCtx.strokeStyle = '#c8b88a'; flappyCtx.lineWidth = 1.5;
-  roundRect(flappyCtx, x+10, bottomTop+18, 32, H-bottomTop-60, 4);
+  // ── BOTTOM MIC (right way up, head pointing up into gap) ──
+  drawMic(cx, gapY + LEEK_GAP, H, false);
+
+  flappyCtx.restore();
+}
+
+function drawMic(cx, topY, bottomY, flipped) {
+  flappyCtx.save();
+  if (flipped) {
+    // Flip vertically around the midpoint
+    flappyCtx.translate(cx, (topY + bottomY) / 2);
+    flappyCtx.scale(1, -1);
+    flappyCtx.translate(-cx, -(topY + bottomY) / 2);
+  }
+
+  const height = bottomY - topY;
+  const headR  = 18;
+  const headY  = topY + headR + 8;
+  const stickW = 10;
+  const stickTop = headY + headR;
+  const stickBot = bottomY - 16;
+  const baseW  = 28;
+
+  // Stick / handle
+  flappyCtx.fillStyle   = '#888';
+  flappyCtx.strokeStyle = '#555';
+  flappyCtx.lineWidth   = 1.5;
+  roundRect(flappyCtx, cx - stickW/2, stickTop, stickW, stickBot - stickTop, 3);
   flappyCtx.fill(); flappyCtx.stroke();
-  // Bulb at top of bottom leek
-  flappyCtx.fillStyle = '#f5f0e8';
+
+  // Grip texture lines on stick
+  flappyCtx.strokeStyle = '#666';
+  flappyCtx.lineWidth   = 1;
+  for (let gy = stickTop + 8; gy < stickBot - 4; gy += 10) {
+    flappyCtx.beginPath();
+    flappyCtx.moveTo(cx - stickW/2 + 2, gy);
+    flappyCtx.lineTo(cx + stickW/2 - 2, gy);
+    flappyCtx.stroke();
+  }
+
+  // Base / stand
+  flappyCtx.fillStyle   = '#777';
+  flappyCtx.strokeStyle = '#444';
+  flappyCtx.lineWidth   = 1.5;
+  roundRect(flappyCtx, cx - baseW/2, stickBot, baseW, 14, 4);
+  flappyCtx.fill(); flappyCtx.stroke();
+
+  // Mic head (rounded capsule)
+  flappyCtx.fillStyle   = '#222';
+  flappyCtx.strokeStyle = '#39C5BB';
+  flappyCtx.lineWidth   = 2.5;
   flappyCtx.beginPath();
-  flappyCtx.ellipse(x+lw/2, bottomTop+20, 18, 20, 0, 0, Math.PI*2);
+  flappyCtx.ellipse(cx, headY, headR, headR + 6, 0, 0, Math.PI * 2);
+  flappyCtx.fill(); flappyCtx.stroke();
+
+  // Mesh dots on head
+  flappyCtx.fillStyle = 'rgba(57,197,187,0.35)';
+  for (let row = -2; row <= 2; row++) {
+    for (let col = -2; col <= 2; col++) {
+      const dx = col * 6, dy = row * 6;
+      if (dx*dx/(headR*headR) + dy*dy/((headR+6)*(headR+6)) <= 0.85) {
+        flappyCtx.beginPath();
+        flappyCtx.arc(cx + dx, headY + dy, 1.5, 0, Math.PI * 2);
+        flappyCtx.fill();
+      }
+    }
+  }
+
+  // Teal glow ring around head
+  flappyCtx.strokeStyle = 'rgba(57,197,187,0.4)';
+  flappyCtx.lineWidth   = 4;
+  flappyCtx.beginPath();
+  flappyCtx.ellipse(cx, headY, headR + 5, headR + 11, 0, 0, Math.PI * 2);
+  flappyCtx.stroke();
+
+  // Small teal band on stick (Miku headset style)
+  flappyCtx.fillStyle   = '#39C5BB';
+  flappyCtx.strokeStyle = '#2a9990';
+  flappyCtx.lineWidth   = 1;
+  roundRect(flappyCtx, cx - stickW/2 - 1, stickTop + 14, stickW + 2, 7, 2);
   flappyCtx.fill(); flappyCtx.stroke();
 
   flappyCtx.restore();
@@ -648,6 +693,7 @@ let lastLeek4Time = 0;
 const NOTE_INTERVAL4 = 650;
 const LEEK_INTERVAL4 = 1300;
 let leekWaveIndex4  = 0;
+let starRotation    = 0;
 let magnets4        = [];
 let magnetActive    = false;
 let magnetEndTime   = 0;
@@ -720,6 +766,7 @@ function pacLoop(now) {
   // Smooth movement toward target (both axes)
   pac.y += (pac.targetY - pac.y) * 0.18;
   pac.x += (pac.targetX - pac.x) * 0.18;
+  starRotation += 0.06; // spin speed
 
   // Spawn magnet power-up
   if (now - lastMagnet4Time > MAGNET_INTERVAL) {
@@ -790,23 +837,23 @@ function pacLoop(now) {
       leeks4.push({ x: W+30, y: 60+lane*laneH+laneH*0.3, w:44, h:80 });
     } else if (wave === 1) {
       // Top + bottom pair (corridor in middle)
-      leeks4.push({ x: W+30, y: 60+0*laneH+laneH*0.3, w:44, h:80 });
-      leeks4.push({ x: W+30, y: 60+3*laneH+laneH*0.3, w:44, h:80 });
+      leeks4.push({ x: W+30, y: 60+0*laneH+laneH*0.5, w:52, h:52 });
+      leeks4.push({ x: W+30, y: 60+3*laneH+laneH*0.5, w:52, h:52 });
     } else if (wave === 2) {
       // Staggered pair (offset x)
       const lane = Math.floor(Math.random() * 2);
-      leeks4.push({ x: W+30,  y: 60+lane*laneH+laneH*0.3, w:44, h:80 });
-      leeks4.push({ x: W+130, y: 60+(lane+2)*laneH+laneH*0.3, w:44, h:80 });
+      leeks4.push({ x: W+30,  y: 60+lane*laneH+laneH*0.5, w:52, h:52 });
+      leeks4.push({ x: W+130, y: 60+(lane+2)*laneH+laneH*0.5, w:52, h:52 });
     } else if (wave === 3) {
       // Three leeks -- avoid one lane (safe lane)
       const safeLane = Math.floor(Math.random() * laneCount);
       for (let ln = 0; ln < laneCount; ln++) {
-        if (ln !== safeLane) leeks4.push({ x: W+30, y: 60+ln*laneH+laneH*0.3, w:44, h:80 });
+        if (ln !== safeLane) leeks4.push({ x: W+30, y: 60+ln*laneH+laneH*0.5, w:52, h:52 });
       }
     } else {
       // Single fast leek (slightly faster)
       const lane = Math.floor(Math.random() * laneCount);
-      leeks4.push({ x: W+30, y: 60+lane*laneH+laneH*0.3, w:44, h:80, fast:true });
+      leeks4.push({ x: W+30, y: 60+lane*laneH+laneH*0.5, w:52, h:52, fast:true });
     }
     leekWaveIndex4++;
     lastLeek4Time = now;
@@ -921,26 +968,57 @@ function drawPac() {
     pacCtx.restore();
   }
 
-  // Draw leeks (simple SVG-style)
+  // Draw evil spinning stars
   for (const lk of leeks4) {
+    const cx = lk.x + lk.w / 2;
+    const cy = lk.y + lk.h / 2;
+    const rot = starRotation + (lk.x * 0.03); // each star rotates slightly differently
+    const outerR = 26;
+    const innerR = 11;
+    const points = lk.fast ? 6 : 5; // fast leeks get 6-pointed star
+
     pacCtx.save();
-    // stem
-    pacCtx.fillStyle = '#e8e0c0';
-    pacCtx.strokeStyle = '#c8b88a';
+    pacCtx.translate(cx, cy);
+    pacCtx.rotate(rot);
+
+    // Dark outer glow
+    pacCtx.shadowColor = lk.fast ? '#ff2244' : '#6600cc';
+    pacCtx.shadowBlur  = 18;
+
+    // Star body
+    pacCtx.beginPath();
+    for (let i = 0; i < points * 2; i++) {
+      const r     = i % 2 === 0 ? outerR : innerR;
+      const angle = (i * Math.PI) / points - Math.PI / 2;
+      if (i === 0) pacCtx.moveTo(r * Math.cos(angle), r * Math.sin(angle));
+      else         pacCtx.lineTo(r * Math.cos(angle), r * Math.sin(angle));
+    }
+    pacCtx.closePath();
+
+    // Fill: dark purple for normal, dark red for fast
+    pacCtx.fillStyle   = lk.fast ? '#330011' : '#1a0033';
+    pacCtx.strokeStyle = lk.fast ? '#ff2244' : '#9933ff';
+    pacCtx.lineWidth   = 2.5;
+    pacCtx.fill();
+    pacCtx.stroke();
+
+    // Inner highlight ring
+    pacCtx.beginPath();
+    pacCtx.arc(0, 0, innerR - 2, 0, Math.PI * 2);
+    pacCtx.strokeStyle = lk.fast ? 'rgba(255,50,80,0.5)' : 'rgba(170,0,255,0.4)';
     pacCtx.lineWidth = 1.5;
+    pacCtx.stroke();
+
+    // Evil eye in center
+    pacCtx.fillStyle = lk.fast ? '#ff2244' : '#9933ff';
     pacCtx.beginPath();
-    pacCtx.roundRect(lk.x + 8, lk.y + 30, 28, lk.h - 30, 4);
-    pacCtx.fill(); pacCtx.stroke();
-    // bulb
-    pacCtx.fillStyle = '#f5f0e8';
+    pacCtx.arc(0, 0, 5, 0, Math.PI * 2);
+    pacCtx.fill();
+    pacCtx.fillStyle = '#000';
     pacCtx.beginPath();
-    pacCtx.ellipse(lk.x + 22, lk.y + 32, 16, 18, 0, 0, Math.PI*2);
-    pacCtx.fill(); pacCtx.stroke();
-    // leaves
-    pacCtx.strokeStyle = '#5a9a3a'; pacCtx.lineWidth = 6; pacCtx.lineCap = 'round';
-    pacCtx.beginPath(); pacCtx.moveTo(lk.x+16, lk.y+16); pacCtx.quadraticCurveTo(lk.x+4, lk.y-10, lk.x+8, lk.y-28); pacCtx.stroke();
-    pacCtx.strokeStyle = '#6ab04a'; pacCtx.lineWidth = 5;
-    pacCtx.beginPath(); pacCtx.moveTo(lk.x+26, lk.y+16); pacCtx.quadraticCurveTo(lk.x+38, lk.y-8, lk.x+34, lk.y-26); pacCtx.stroke();
+    pacCtx.arc(0, 0, 2.5, 0, Math.PI * 2);
+    pacCtx.fill();
+
     pacCtx.restore();
   }
 
