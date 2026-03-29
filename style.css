@@ -207,7 +207,7 @@ body.level2 #bg{
 #quiz-done-msg.hidden{display:none;}
 #level1-miku-wrap{
   position:absolute;bottom:48px;right:16px;
-  width:clamp(80px,10vw,130px);
+  width:clamp(140px,16vw,220px);
   z-index:5;pointer-events:none;
 }
 #level1-miku{
@@ -930,9 +930,9 @@ body.fever-mode.level2 #level2-miku {
 }
 
 .whack-hole {
-  position:relative;height:clamp(100px,14vw,140px);
+  position:relative;height:clamp(120px,16vw,160px);
   display:flex;align-items:flex-end;justify-content:center;
-  overflow:hidden;cursor:pointer;
+  overflow:visible;cursor:pointer;
 }
 
 /* Dark dirt mound */
@@ -947,11 +947,11 @@ body.fever-mode.level2 #level2-miku {
 
 /* The popping character */
 .whack-pop {
-  position:absolute;bottom:14px;
+  position:absolute;bottom:20px;
   display:flex;align-items:center;justify-content:center;
   width:100%;z-index:3;
-  transform:translateY(100%);
-  transition:transform 0.2s cubic-bezier(0.34,1.4,0.64,1);
+  transform:translateY(110%);
+  transition:transform 0.22s cubic-bezier(0.34,1.4,0.64,1);
 }
 .whack-pop.up { transform:translateY(0); }
 
