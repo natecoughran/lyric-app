@@ -1321,17 +1321,32 @@ document.addEventListener('keydown', (e) => {
 let audioCtx = null;
 
 
-function getStarRating(levelScore, thresholds) {
-  if (levelScore >= thresholds[2]) return 3;
-  if (levelScore >= thresholds[1]) return 2;
-  if (levelScore >= thresholds[0]) return 1;
-  return 0;
+function collectStar(levelStars, idx, label) {
+  if (levelStars[idx]) return;
+  levelStars[idx] = true;
+  addScore(STAR_BONUS);
+  const pop = document.createElement('div');
+  pop.className = 'star-collect-pop';
+  pop.textContent = '⭐ +500!';
+  pop.style.cssText = `left:${20 + Math.random()*60}%;top:${20 + Math.random()*40}%;`;
+  document.body.appendChild(pop);
+  pop.addEventListener('animationend', () => pop.remove());
+  playPopSound();
+  for (let i = 0; i < 12; i++) spawnParticleAt(Math.random()*window.innerWidth, Math.random()*window.innerHeight, true);
 }
 
-function renderStars(count) {
-  return '⭐'.repeat(count) + '☆'.repeat(3 - count);
+function buildStarSummary() {
+  const all = [starsL1, starsL2, starsL3, starsL4];
+  const names = ['Level 1 Whack', 'Level 2 Boxing', 'Level 3 Flappy', 'Level 4 Runner'];
+  const totalStars = all.flat().filter(Boolean).length;
+  return names.map((name, i) => {
+    const row = all[i].map(s => s
+      ? '<span class="star-earned">⭐</span>'
+      : '<span class="star-empty">☆</span>'
+    ).join('');
+    return `<div class="star-row"><span class="star-level">${name}</span><span class="star-val">${row}</span></div>`;
+  }).join('') + `<div class="star-total">Stars: ${totalStars} / 12 &nbsp;(+${(totalStars * STAR_BONUS).toLocaleString()} pts)</div>`;
 }
-
 
 function launchConfetti() {
   const colors = ['#39C5BB','#FF69B4','#00FFFF','#FFD700','#FF6B6B','#88FF44','#ffffff'];
@@ -1352,19 +1367,6 @@ function launchConfetti() {
       el.addEventListener('animationend', () => el.remove());
     }, i * 25);
   }
-}
-
-function buildStarSummary() {
-  const l1Stars = getStarRating(whackHit,          [5, 8, 10]); // whack hits
-  const l2Stars = getStarRating(score2,            [300, 700, 1200]);
-  const l3Stars = getStarRating(leeksDodged, [3, 7, 12]); // raw leek count
-  const l4Stars = getStarRating(score4,            [200, 500, 900]);
-  return `
-    <div class="star-row"><span class="star-level">Level 1 Quiz</span><span class="star-val">${renderStars(l1Stars)}</span></div>
-    <div class="star-row"><span class="star-level">Level 2 Boxing</span><span class="star-val">${renderStars(l2Stars)}</span></div>
-    <div class="star-row"><span class="star-level">Level 3 Flappy</span><span class="star-val">${renderStars(l3Stars)}</span></div>
-    <div class="star-row"><span class="star-level">Level 4 Runner</span><span class="star-val">${renderStars(l4Stars)}</span></div>
-  `;
 }
 
 function getAudioCtx() {
