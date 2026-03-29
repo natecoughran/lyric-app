@@ -76,6 +76,8 @@ const endScreen      = document.getElementById('end-screen');
 const endScoreEl     = document.getElementById('end-score');
 const endNotesField  = document.getElementById('end-notes-field');
 const endHighScoreEl = document.getElementById('end-high-score');
+const endStarsEl     = document.getElementById('end-stars');
+const endCongrats    = document.getElementById('end-congrats');
 const btn3PlayPause  = document.getElementById('btn3-play-pause');
 const btn3Stop       = document.getElementById('btn3-stop');
 const seekFill3      = document.getElementById('seek-fill3');
@@ -284,6 +286,8 @@ let arrowTimerAnimHandle = null;
 let l2Active        = false;
 let l2StartTime     = null;
 let l2FeverMode     = false;
+let doubleArrow     = null;  // second arrow in a sequence
+let doubleArrowHit  = false; // whether first was hit
 
 // ══════════════════════════════════
 //   LEVEL 3 — FLAPPY MIKU
@@ -644,7 +648,13 @@ let lastNote4Time = 0;
 let lastLeek4Time = 0;
 const NOTE_INTERVAL4 = 900;
 const LEEK_INTERVAL4 = 1800;
-let leekWaveIndex4 = 0;
+let leekWaveIndex4  = 0;
+let magnets4        = [];
+let magnetActive    = false;
+let magnetEndTime   = 0;
+let lastMagnet4Time = 0;
+const MAGNET_INTERVAL = 8000;
+const MAGNET_DURATION = 3000;
 const PAC_STEP = 6; // pixels per key press
 
 function initPac() {
@@ -654,6 +664,9 @@ function initPac() {
   pac.targetX = 110;
   notes4  = [];
   leeks4  = [];
+  magnets4 = [];
+  magnetActive = false;
+  lastMagnet4Time = 0;
   leekWaveIndex4 = 0;
   notesEaten = 0;
   score4  = 0;
@@ -708,6 +721,48 @@ function pacLoop(now) {
   // Smooth movement toward target (both axes)
   pac.y += (pac.targetY - pac.y) * 0.18;
   pac.x += (pac.targetX - pac.x) * 0.18;
+
+  // Spawn magnet power-up
+  if (now - lastMagnet4Time > MAGNET_INTERVAL) {
+    const laneCount = 5;
+    const laneH = (H - 120) / laneCount;
+    const lane = Math.floor(Math.random() * laneCount);
+    magnets4.push({ x: W + 30, y: 60 + lane * laneH + laneH * 0.5, r: 22, collected: false });
+    lastMagnet4Time = now;
+  }
+
+  // Move magnets
+  magnets4.forEach(m => m.x -= NOTE_SPEED);
+  magnets4 = magnets4.filter(m => m.x > -40 && !m.collected);
+
+  // Magnet collision
+  for (const mg of magnets4) {
+    if (Math.abs((pac.x + pac.w/2) - mg.x) < 40 && Math.abs((pac.y + pac.h/2) - mg.y) < 40) {
+      mg.collected = true;
+      magnetActive  = true;
+      magnetEndTime = now + MAGNET_DURATION;
+      playFanfare();
+      for (let i = 0; i < 10; i++) spawnParticleAt(pac.x + pac.w/2, pac.y + pac.h/2, true);
+    }
+  }
+
+  // Magnet effect -- auto-collect all notes on screen
+  if (magnetActive && now < magnetEndTime) {
+    for (const n of notes4) {
+      if (!n.eaten) {
+        n.eaten = true;
+        notesEaten++;
+        score4 += 50;
+        playEatSound();
+        spawnParticleAt(n.x, n.y, true);
+      }
+    }
+    notes4 = notes4.filter(n => !n.eaten);
+    score4El.textContent = score4.toLocaleString();
+    score4TotalEl.textContent = (score + score2 + leeksDodged * 50 + score4).toLocaleString();
+  } else if (magnetActive && now >= magnetEndTime) {
+    magnetActive = false;
+  }
 
   // Spawn notes
   if (now - lastNote4Time > NOTE_INTERVAL4) {
@@ -829,6 +884,41 @@ function drawPac() {
     pacCtx.textAlign = 'center';
     pacCtx.textBaseline = 'middle';
     pacCtx.fillText(n.symbol, n.x, n.y);
+    pacCtx.restore();
+  }
+
+  // Draw magnet power-ups
+  for (const mg of magnets4) {
+    pacCtx.save();
+    const pulse = Math.sin(now * 0.006) * 3;
+    pacCtx.strokeStyle = '#00BFFF';
+    pacCtx.lineWidth = 4;
+    pacCtx.shadowColor = '#00BFFF';
+    pacCtx.shadowBlur = 18 + pulse;
+    pacCtx.beginPath();
+    pacCtx.arc(mg.x, mg.y, mg.r + pulse * 0.4, 0, Math.PI * 2);
+    pacCtx.stroke();
+    pacCtx.font = '26px serif';
+    pacCtx.fillStyle = '#00BFFF';
+    pacCtx.textAlign = 'center';
+    pacCtx.textBaseline = 'middle';
+    pacCtx.fillText('🧲', mg.x, mg.y);
+    pacCtx.restore();
+  }
+
+  // Magnet active indicator
+  if (magnetActive) {
+    const remaining = ((magnetEndTime - now) / MAGNET_DURATION);
+    pacCtx.save();
+    pacCtx.strokeStyle = 'rgba(0,191,255,0.6)';
+    pacCtx.lineWidth = 6;
+    pacCtx.beginPath();
+    pacCtx.arc(pac.x + pac.w/2, pac.y + pac.h/2, pac.w * 0.8, 0, Math.PI * 2 * remaining);
+    pacCtx.stroke();
+    pacCtx.font = 'bold 14px sans-serif';
+    pacCtx.fillStyle = '#00BFFF';
+    pacCtx.textAlign = 'center';
+    pacCtx.fillText('MAGNET!', pac.x + pac.w/2, pac.y - 12);
     pacCtx.restore();
   }
 
@@ -971,10 +1061,22 @@ function goToLevel2() {
 
 function showNextArrow() {
   if (!l2Active || !player.isPlaying) return;
-  currentArrow = ARROWS[Math.floor(Math.random() * ARROWS.length)];
-  arrowShownAt = performance.now();
-  arrowTarget.textContent = currentArrow;
-  arrowTarget.className   = '';
+  currentArrow    = ARROWS[Math.floor(Math.random() * ARROWS.length)];
+  doubleArrow     = null;
+  doubleArrowHit  = false;
+  arrowShownAt    = performance.now();
+
+  // 25% chance of a combo sequence (two arrows)
+  // Only in fever mode or when combo >= 4
+  if ((l2FeverMode || combo2 >= 4) && Math.random() < 0.35) {
+    // Pick a different second arrow
+    const others = ARROWS.filter(a => a !== currentArrow);
+    doubleArrow = others[Math.floor(Math.random() * others.length)];
+    arrowTarget.innerHTML = `<span class="arrow-main">${currentArrow}</span><span class="arrow-combo"> + ${doubleArrow}</span>`;
+  } else {
+    arrowTarget.textContent = currentArrow;
+  }
+  arrowTarget.className = '';
 
   // Animate timer bar draining
   arrowTimerBar.style.transition = 'none';
@@ -993,27 +1095,46 @@ function showNextArrow() {
 function registerHit(key) {
   if (!l2Active || !currentArrow) return;
   const expected = ARROW_TO_KEY[currentArrow];
+
+  // Handle double arrow combo -- first hit
+  if (doubleArrow && !doubleArrowHit) {
+    if (key !== expected) { registerMiss(); return; }
+    doubleArrowHit = true;
+    // Visually update to show second arrow needed
+    arrowTarget.innerHTML = `<span class="arrow-done">${currentArrow} ✓</span><span class="arrow-main"> ${doubleArrow}</span>`;
+    highlightKey(key);
+    // Update currentArrow to second arrow
+    currentArrow = doubleArrow;
+    arrowShownAt = performance.now(); // reset timer for second hit
+    return;
+  }
+
   if (key !== expected) {
     registerMiss(); return;
   }
   const elapsed = performance.now() - arrowShownAt;
   clearTimeout(arrowTimerHandle);
+  const wasDouble = doubleArrow !== null;
+  doubleArrow = null;
+  doubleArrowHit = false;
   currentArrow = null;
 
   // Flash key indicator
   highlightKey(key);
 
   if (elapsed <= PERFECT_MS) {
-    showRating('PERFECT ✦', 'perfect');
-    addScore2(150 * Math.min(combo2 + 1, 8));
+    const bonusMult = wasDouble ? 2.5 : 1;
+    showRating(wasDouble ? '🔥 COMBO! ✦✦' : 'PERFECT ✦', 'perfect');
+    addScore2(Math.round(150 * Math.min(combo2 + 1, 8) * bonusMult));
     combo2++;
     arrowTarget.classList.add('hit-perfect');
     l2Miku.classList.add('hit-perfect');
     setTimeout(() => { arrowTarget.classList.remove('hit-perfect'); l2Miku.classList.remove('hit-perfect'); }, 300);
     for (let i = 0; i < 8; i++) spawnParticleAt(Math.random()*window.innerWidth, Math.random()*window.innerHeight, true);
   } else {
-    showRating('GOOD ✓', 'good');
-    addScore2(75 * Math.min(combo2 + 1, 8));
+    const bonusMult = wasDouble ? 2 : 1;
+    showRating(wasDouble ? '🔥 COMBO! ✓✓' : 'GOOD ✓', 'good');
+    addScore2(Math.round(75 * Math.min(combo2 + 1, 8) * bonusMult));
     combo2++;
     arrowTarget.classList.add('hit-good');
     l2Miku.classList.add('hit-good');
@@ -1109,6 +1230,53 @@ document.addEventListener('keydown', (e) => {
 // ══════════════════════════════════
 
 let audioCtx = null;
+
+
+function getStarRating(levelScore, thresholds) {
+  if (levelScore >= thresholds[2]) return 3;
+  if (levelScore >= thresholds[1]) return 2;
+  if (levelScore >= thresholds[0]) return 1;
+  return 0;
+}
+
+function renderStars(count) {
+  return '⭐'.repeat(count) + '☆'.repeat(3 - count);
+}
+
+
+function launchConfetti() {
+  const colors = ['#39C5BB','#FF69B4','#00FFFF','#FFD700','#FF6B6B','#88FF44','#ffffff'];
+  for (let i = 0; i < 80; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'confetti-piece';
+      el.style.cssText = `
+        left:${Math.random() * 100}vw;
+        background:${colors[Math.floor(Math.random() * colors.length)]};
+        width:${6 + Math.random() * 8}px;
+        height:${8 + Math.random() * 10}px;
+        animation-duration:${1.5 + Math.random() * 2}s;
+        animation-delay:${Math.random() * 0.5}s;
+        transform:rotate(${Math.random() * 360}deg);
+      `;
+      document.body.appendChild(el);
+      el.addEventListener('animationend', () => el.remove());
+    }, i * 25);
+  }
+}
+
+function buildStarSummary() {
+  const l1Stars = getStarRating(score,             [200, 500, 800]);
+  const l2Stars = getStarRating(score2,            [300, 700, 1200]);
+  const l3Stars = getStarRating(leeksDodged * 50,  [150, 400, 700]);
+  const l4Stars = getStarRating(score4,            [200, 500, 900]);
+  return `
+    <div class="star-row"><span class="star-level">Level 1 Quiz</span><span class="star-val">${renderStars(l1Stars)}</span></div>
+    <div class="star-row"><span class="star-level">Level 2 Boxing</span><span class="star-val">${renderStars(l2Stars)}</span></div>
+    <div class="star-row"><span class="star-level">Level 3 Flappy</span><span class="star-val">${renderStars(l3Stars)}</span></div>
+    <div class="star-row"><span class="star-level">Level 4 Runner</span><span class="star-val">${renderStars(l4Stars)}</span></div>
+  `;
+}
 
 function getAudioCtx() {
   if (!audioCtx) {
@@ -1491,6 +1659,22 @@ function goToEndScreen() {
     document.body.classList.add('end');
     endScreen.classList.remove('hidden');
 
+    // Miku reacts to score
+    const endMiku = document.getElementById('end-miku');
+    if (finalTotal >= 1500) {
+      endMiku.src = 'miku_image.png'; // happy
+      endCongrats.textContent = '🌟 AMAZING! You crushed it! 🌟';
+    } else if (finalTotal >= 800) {
+      endMiku.src = 'miku_image.png';
+      endCongrats.textContent = '🎵 Great job! So close to perfect!';
+    } else if (finalTotal >= 400) {
+      endMiku.src = 'miku_alien.png'; // surprised
+      endCongrats.textContent = '💙 Not bad! Try again to beat your score!';
+    } else {
+      endMiku.src = 'miku_alien.png'; // shocked
+      endCongrats.textContent = '🧅 Watch out for those leeks next time!';
+    }
+
     // Show final score immediately with captured value
     endScoreEl.textContent = finalTotal.toLocaleString();
     endScoreEl.classList.toggle('negative', finalTotal < 0);
@@ -1500,13 +1684,16 @@ function goToEndScreen() {
       localStorage.setItem('mikuHighScore', highScore);
       endHighScoreEl.textContent = '🌟 NEW HIGH SCORE! 🌟';
       endHighScoreEl.style.color = '#FFD700';
+      endStarsEl.innerHTML = buildStarSummary();
     } else {
       endHighScoreEl.textContent = 'Best: ' + highScore.toLocaleString();
       endHighScoreEl.style.color = 'rgba(57,197,187,0.7)';
+      endStarsEl.innerHTML = buildStarSummary();
     }
 
     // Start falling notes
     endScreenActive = true;
+    launchConfetti();
     endSpawnInterval = setInterval(spawnEndNote, 700);
     setTimeout(spawnEndNote, 100);
     setTimeout(spawnEndNote, 350);

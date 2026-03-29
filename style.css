@@ -817,3 +817,43 @@ body.fever-mode.level2 #level2-miku {
   from { filter:drop-shadow(0 0 30px rgba(255,215,0,0.8)); }
   to   { filter:drop-shadow(0 0 50px rgba(255,80,150,0.9)); }
 }
+
+/* ══ Double arrow combo display ══ */
+.arrow-main  { font-size:inherit; }
+.arrow-combo { font-size:0.55em; color:rgba(150,80,255,0.8); vertical-align:middle; }
+.arrow-done  { font-size:0.7em; color:rgba(0,255,136,0.7); text-decoration:line-through; }
+
+/* ══ Star ratings on end screen ══ */
+#end-stars {
+  display:flex; flex-direction:column; gap:8px;
+  background:rgba(255,255,255,0.2); backdrop-filter:blur(6px);
+  border-radius:16px; padding:14px 24px;
+  border:2px solid rgba(57,197,187,0.3);
+  min-width:280px; z-index:10;
+}
+.star-row {
+  display:flex; justify-content:space-between; align-items:center; gap:20px;
+}
+.star-level {
+  font-family:'Black Han Sans',sans-serif;
+  font-size:clamp(0.75rem,1.8vw,1rem);
+  color:rgba(57,197,187,0.9); letter-spacing:0.08em;
+}
+.star-val {
+  font-size:clamp(1rem,2.5vw,1.4rem); letter-spacing:0.05em;
+}
+
+/* ══ Confetti ══ */
+.confetti-piece {
+  position:fixed;
+  top:-20px;
+  z-index:500;
+  border-radius:2px;
+  pointer-events:none;
+  animation:confettiFall linear forwards;
+}
+@keyframes confettiFall {
+  0%   { transform:translateY(0) rotate(0deg) scaleX(1); opacity:1; }
+  50%  { transform:translateY(50vh) rotate(360deg) scaleX(-1); opacity:1; }
+  100% { transform:translateY(105vh) rotate(720deg) scaleX(1); opacity:0; }
+}
