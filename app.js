@@ -301,9 +301,9 @@ let flappyRaf     = null;
 let leeksDodged   = 0;
 const GRAVITY     = 0.45;
 const FLAP_FORCE  = -8.5;
-const LEEK_SPEED  = 4.8;
+const LEEK_SPEED  = 6.2;
 const LEEK_GAP    = 238;
-const LEEK_INTERVAL = 2400; // ms between leeks -- more spread out
+const LEEK_INTERVAL = 2000; // ms between leeks
 let lastLeekTime  = 0;
 
 // Miku fairy image
@@ -324,7 +324,7 @@ function initFlappy() {
   leeks = [];
   rings = [];
   lastRingTime = performance.now();
-  lastLeekTime = -(LEEK_INTERVAL - 800);
+  lastLeekTime = -(LEEK_INTERVAL * 2); // first leek appears almost immediately
   leeksDodged = 0;
   score3El.textContent = '0';
   flappyGameover.classList.add('hidden');
@@ -343,7 +343,7 @@ function startFlappy() {
   if (flappyRunning) return;
   flappyRunning = true;
   flappyInst.classList.add('hidden');
-  lastLeekTime = performance.now() - (LEEK_INTERVAL - 800); // first leek appears quickly
+  lastLeekTime = performance.now() - (LEEK_INTERVAL * 1.8); // first leek appears very quickly
   lastRingTime = performance.now();
   flappyLoop(performance.now());
 }
@@ -1267,7 +1267,7 @@ function launchConfetti() {
 function buildStarSummary() {
   const l1Stars = getStarRating(score,             [200, 500, 800]);
   const l2Stars = getStarRating(score2,            [300, 700, 1200]);
-  const l3Stars = getStarRating(leeksDodged * 50,  [150, 400, 700]);
+  const l3Stars = getStarRating(leeksDodged, [3, 7, 12]); // raw leek count
   const l4Stars = getStarRating(score4,            [200, 500, 900]);
   return `
     <div class="star-row"><span class="star-level">Level 1 Quiz</span><span class="star-val">${renderStars(l1Stars)}</span></div>
