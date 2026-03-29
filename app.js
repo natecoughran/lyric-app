@@ -25,13 +25,7 @@ const btnStop        = document.getElementById('btn-stop');
 const seekFill       = document.getElementById('seek-fill');
 const timeDisplay    = document.getElementById('time-display');
 const scoreEl        = document.getElementById('score');
-const quizQNum       = document.getElementById('quiz-q-num');
-const quizProgressFill = document.getElementById('quiz-progress-fill');
-const quizQuestion   = document.getElementById('quiz-question');
-const quizAnswers    = document.getElementById('quiz-answers');
-const quizFeedback   = document.getElementById('quiz-feedback');
-const quizBonusScore = document.getElementById('quiz-bonus-score');
-const quizDoneMsg    = document.getElementById('quiz-done-msg');
+// whack-a-miku refs are fetched by id inside functions
 // Level 2
 const l2Miku         = document.getElementById('level2-miku');
 const btn2PlayPause  = document.getElementById('btn2-play-pause');
@@ -101,31 +95,20 @@ let playerReady  = false;
 let playWhenReady = false;
 
 // ══════════════════════════════════
-//   QUIZ DATA (Level 1)
+//   WHACK-A-MIKU (Level 1)
 // ══════════════════════════════════
 
-const QUIZ_QUESTIONS = [
-  { question: "What color is Hatsune Miku's hair?",
-    answers: ["Pink","Teal / Cyan","Purple","Blue"], correct: 1 },
-  { question: 'What does "Hatsune Miku" roughly mean in Japanese?',
-    answers: ["Dancing Princess","First Sound of the Future","Green Light Singer","Voice of the Stars"], correct: 1 },
-  { question: "What kind of software is Hatsune Miku?",
-    answers: ["A video game character","A real singer","A voice synthesizer","A cartoon character"], correct: 2 },
-  { question: "What is the name of Miku's iconic head accessory?",
-    answers: ["Headphones","A crown","A headset / microphone unit","Cat ears"], correct: 2 },
-  { question: "In what year was Hatsune Miku first released?",
-    answers: ["2004","2007","2009","2012"], correct: 1 },
-];
+const WHACK_HOLES   = 9;
+const WHACK_TARGET  = 10;
+const WHACK_HIT_PTS = 100;
+const WHACK_PEN_PTS = 150;
 
-const QUIZ_CORRECT_BONUS = 200;
-const QUIZ_WRONG_PENALTY = -100;
-let currentQuestion = 0;
-let quizBonusTotal  = 0;
-let quizAnswered    = false;
-let quizComplete    = false;
-let quizTimerHandle = null;
-let lifeline5050Used = false;
-const QUIZ_TIME_MS  = 8000;
+let whackHit      = 0;
+let whackBonus    = 0;
+let whackDone     = false;
+let whackActive   = false;
+let whackTimers   = [];
+let whackState    = new Array(9).fill('empty');
 
 
 
@@ -148,126 +131,130 @@ function use5050() {
   });
 }
 
-function startQuizTimer() {
-  clearTimeout(quizTimerHandle);
-  // Animate the timer bar
-  const bar = document.getElementById('quiz-timer-bar');
-  if (bar) {
-    bar.style.transition = 'none';
-    bar.style.transform  = 'scaleX(1)';
-    void bar.offsetWidth;
-    bar.style.transition = `transform ${QUIZ_TIME_MS}ms linear`;
-    bar.style.transform  = 'scaleX(0)';
+function initWhack() {
+  whackHit    = 0;
+  whackBonus  = 0;
+  whackDone   = false;
+  whackActive = true;
+  whackState  = new Array(9).fill('empty');
+  whackTimers.forEach(t => clearTimeout(t));
+  whackTimers = [];
+  buildWhackGrid();
+  updateWhackHUD();
+  scheduleNext();
+}
+
+function buildWhackGrid() {
+  const grid = document.getElementById('whack-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  for (let i = 0; i < WHACK_HOLES; i++) {
+    const hole = document.createElement('div');
+    hole.className = 'whack-hole';
+    hole.id = 'wh' + i;
+    const rim = document.createElement('div');
+    rim.className = 'whack-rim';
+    const pop = document.createElement('div');
+    pop.className = 'whack-pop';
+    pop.id = 'wp' + i;
+    hole.appendChild(pop);
+    hole.appendChild(rim);
+    hole.addEventListener('click',      () => whackClick(i));
+    hole.addEventListener('touchstart', (e) => { e.preventDefault(); whackClick(i); }, {passive:false});
+    grid.appendChild(hole);
   }
-  quizTimerHandle = setTimeout(() => {
-    if (!quizAnswered && !quizComplete) {
-      // Time's up -- treat as wrong answer, auto-select nothing
-      quizAnswered = true;
-      const q = QUIZ_QUESTIONS[currentQuestion];
-      const allBtns = quizAnswers.querySelectorAll('.quiz-answer-btn');
-      allBtns.forEach(b => b.classList.add('disabled'));
-      allBtns[q.correct].classList.remove('disabled');
-      allBtns[q.correct].classList.add('reveal');
-      quizBonusTotal += QUIZ_WRONG_PENALTY;
-      quizFeedback.textContent = `⏰ Time's up! ${QUIZ_WRONG_PENALTY} points`;
-      quizFeedback.className = 'wrong';
-      quizBonusScore.textContent = quizBonusTotal >= 0 ? `+${quizBonusTotal}` : `${quizBonusTotal}`;
-      quizBonusScore.style.color = quizBonusTotal >= 0 ? 'var(--l1-green)' : '#ff4444';
-      addScore(QUIZ_WRONG_PENALTY);
-      setTimeout(() => {
-        if (currentQuestion < QUIZ_QUESTIONS.length - 1) {
-          quizAnswers.style.opacity = '0'; quizQuestion.style.opacity = '0'; quizFeedback.style.opacity = '0';
-          setTimeout(() => {
-            quizAnswers.style.opacity = '1'; quizQuestion.style.opacity = '1'; quizFeedback.style.opacity = '1';
-            loadQuestion(currentQuestion + 1);
-          }, 350);
-        } else {
-          quizComplete = true;
-          quizProgressFill.style.width = '100%';
-          quizQuestion.textContent = ''; quizAnswers.innerHTML = ''; quizFeedback.textContent = '';
-          quizDoneMsg.classList.remove('hidden');
-          setTimeout(() => goToLevel2(), 2500);
-        }
-      }, 1800);
-    }
-  }, QUIZ_TIME_MS);
 }
 
-function loadQuestion(index) {
-  const q = QUIZ_QUESTIONS[index];
-  quizAnswered = false; currentQuestion = index;
-  quizQNum.textContent = index + 1;
-  quizProgressFill.style.width = (index / QUIZ_QUESTIONS.length * 100) + '%';
-  quizQuestion.style.opacity = '0'; quizQuestion.style.transform = 'translateY(8px)';
-  setTimeout(() => {
-    quizQuestion.textContent = q.question;
-    quizQuestion.style.transition = 'opacity 0.3s,transform 0.3s';
-    quizQuestion.style.opacity = '1'; quizQuestion.style.transform = 'translateY(0)';
-  }, 80);
-  quizFeedback.textContent = ''; quizFeedback.className = '';
-  quizAnswers.innerHTML = '';
-  startQuizTimer();
-  q.answers.forEach((answer, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'quiz-answer-btn';
-    btn.textContent = answer;
-    btn.style.opacity = '0'; btn.style.transform = 'translateY(6px)';
-    btn.addEventListener('click', () => handleAnswer(i, btn));
-    btn.addEventListener('touchstart', (e) => { e.preventDefault(); handleAnswer(i, btn); }, { passive: false });
-    quizAnswers.appendChild(btn);
-    setTimeout(() => {
-      btn.style.transition = 'opacity 0.25s,transform 0.25s,background 0.15s,border-color 0.15s,box-shadow 0.15s';
-      btn.style.opacity = '1'; btn.style.transform = 'translateY(0)';
-    }, 120 + i * 70);
-  });
+function scheduleNext() {
+  if (!whackActive || whackDone) return;
+  const delay = Math.max(300, 900 - whackHit * 50);
+  const t = setTimeout(() => popHole(), delay);
+  whackTimers.push(t);
 }
 
-function handleAnswer(selectedIndex, btn) {
-  if (quizAnswered || quizComplete) return;
-  quizAnswered = true;
-  clearTimeout(quizTimerHandle);
-  const q = QUIZ_QUESTIONS[currentQuestion];
-  const allBtns = quizAnswers.querySelectorAll('.quiz-answer-btn');
-  allBtns.forEach(b => b.classList.add('disabled'));
-  const isCorrect = selectedIndex === q.correct;
-  if (isCorrect) {
-    btn.classList.remove('disabled'); btn.classList.add('correct');
-    quizBonusTotal += QUIZ_CORRECT_BONUS;
-    quizFeedback.textContent = `✓ Correct! +${QUIZ_CORRECT_BONUS} bonus points!`;
-    quizFeedback.className = 'correct';
-    l1Miku.classList.add('beat'); setTimeout(() => l1Miku.classList.remove('beat'), 400);
-    for (let i = 0; i < 10; i++) spawnParticleAt(Math.random()*window.innerWidth, Math.random()*window.innerHeight, true);
+function popHole() {
+  if (!whackActive || whackDone) return;
+  const empties = whackState.map((s,i) => s === 'empty' ? i : -1).filter(i => i >= 0);
+  if (empties.length === 0) { scheduleNext(); return; }
+  const idx  = empties[Math.floor(Math.random() * empties.length)];
+  const type = Math.random() < 0.72 ? 'miku' : 'flag';
+  whackState[idx] = type;
+
+  const pop = document.getElementById('wp' + idx);
+  if (!pop) return;
+  pop.innerHTML = type === 'miku'
+    ? '<img src="miku_alien.png" class="whack-img"/>'
+    : '<img src="union_jack.png" class="whack-flag-img"/>';
+  pop.classList.add('up');
+
+  // How long it stays up -- gets shorter as you progress
+  const upTime = Math.max(600, 1300 - whackHit * 55);
+  const t = setTimeout(() => retractHole(idx), upTime);
+  whackTimers.push(t);
+  scheduleNext();
+}
+
+function retractHole(idx) {
+  whackState[idx] = 'empty';
+  const pop = document.getElementById('wp' + idx);
+  if (pop) { pop.classList.remove('up'); setTimeout(() => { pop.innerHTML = ''; }, 250); }
+}
+
+function whackClick(idx) {
+  if (!whackActive || whackDone || whackState[idx] === 'empty') return;
+  const type = whackState[idx];
+  retractHole(idx);
+
+  if (type === 'miku') {
+    whackHit++;
+    whackBonus += WHACK_HIT_PTS;
+    addScore(WHACK_HIT_PTS);
+    playPopSound();
+    for (let i = 0; i < 8; i++) spawnParticleAt(
+      Math.random() * window.innerWidth,
+      Math.random() * window.innerHeight, true
+    );
+    l1Miku.classList.add('beat');
+    setTimeout(() => l1Miku.classList.remove('beat'), 300);
   } else {
-    btn.classList.remove('disabled'); btn.classList.add('wrong');
-    allBtns[q.correct].classList.remove('disabled'); allBtns[q.correct].classList.add('reveal');
-    quizBonusTotal += QUIZ_WRONG_PENALTY;
-    quizFeedback.textContent = `✗ Not quite! ${QUIZ_WRONG_PENALTY} points`;
-    quizFeedback.className = 'wrong';
-    const flash = document.createElement('div'); flash.className = 'penalty-flash';
-    document.body.appendChild(flash); flash.addEventListener('animationend', () => flash.remove());
+    whackBonus -= WHACK_PEN_PTS;
+    addScore(-WHACK_PEN_PTS);
+    const flash = document.createElement('div');
+    flash.className = 'penalty-flash';
+    document.body.appendChild(flash);
+    flash.addEventListener('animationend', () => flash.remove());
   }
-  quizBonusScore.textContent = quizBonusTotal >= 0 ? `+${quizBonusTotal}` : `${quizBonusTotal}`;
-  quizBonusScore.style.color = quizBonusTotal >= 0 ? 'var(--l1-green)' : '#ff4444';
-  addScore(isCorrect ? QUIZ_CORRECT_BONUS : QUIZ_WRONG_PENALTY);
 
-  setTimeout(() => {
-    if (currentQuestion < QUIZ_QUESTIONS.length - 1) {
-      quizAnswers.style.opacity = '0'; quizQuestion.style.opacity = '0'; quizFeedback.style.opacity = '0';
-      setTimeout(() => {
-        quizAnswers.style.opacity = '1'; quizQuestion.style.opacity = '1'; quizFeedback.style.opacity = '1';
-        loadQuestion(currentQuestion + 1);
-      }, 350);
-    } else {
-      quizComplete = true;
-      quizProgressFill.style.width = '100%';
-      quizQuestion.textContent = ''; quizAnswers.innerHTML = ''; quizFeedback.textContent = '';
-      quizDoneMsg.classList.remove('hidden');
-      // Transition to Level 2 after a short pause
-      setTimeout(() => goToLevel2(), 2500);
-      // (Level 2 will transition to Level 3 after a set time)
-    }
-  }, 1800);
+  updateWhackHUD();
+
+  if (whackHit >= WHACK_TARGET) {
+    whackDone   = true;
+    whackActive = false;
+    whackTimers.forEach(t => clearTimeout(t));
+    // Hide all holes
+    for (let i = 0; i < WHACK_HOLES; i++) retractHole(i);
+    document.getElementById('whack-done-msg').classList.remove('hidden');
+    document.getElementById('whack-instruction').classList.add('hidden');
+    setTimeout(() => goToLevel2(), 2500);
+  }
 }
+
+function updateWhackHUD() {
+  const hitEl   = document.getElementById('whack-hit-count');
+  const bonusEl = document.getElementById('whack-bonus');
+  const prog    = document.getElementById('whack-progress-fill');
+  if (hitEl)   hitEl.textContent   = whackHit + ' / ' + WHACK_TARGET;
+  if (bonusEl) {
+    bonusEl.textContent = (whackBonus >= 0 ? '+' : '') + whackBonus;
+    bonusEl.style.color = whackBonus >= 0 ? 'var(--l1-green)' : '#ff4444';
+  }
+  if (prog) prog.style.width = (whackHit / WHACK_TARGET * 100) + '%';
+}
+
+function use5050() {}   // stub -- lifeline removed with quiz
+function loadQuestion() {}  // stub
+function handleAnswer() {}  // stub
+
 
 // ══════════════════════════════════
 //   LEVEL 2 — BEAT-SYNCED BOXING
@@ -1050,7 +1037,7 @@ function goToLevel4() {
   flappyPaused = true;
   cancelAnimationFrame(flappyRaf);
   transitionText.textContent = '🎵 Level 4 🎵';
-  transitionSub.textContent  = 'Eat the notes! Dodge the leeks!';
+  transitionSub.textContent  = 'Eat the notes! Dodge the stars!';
   levelTransition.classList.remove('hidden');
   playFanfare();
   setTimeout(() => {
@@ -1084,8 +1071,8 @@ function goToLevel3() {
   arrowTarget.textContent = '';
   arrowTimerBar.style.transition = 'none';
   arrowTimerBar.style.transform = 'scaleX(0)';
-  transitionText.textContent = '🧅 Level 3 🧅';
-  transitionSub.textContent  = 'Flappy Miku! Dodge the leeks!';
+  transitionText.textContent = '🎤 Level 3 🎤';
+  transitionSub.textContent  = 'Flappy Miku! Dodge the microphones!';
   levelTransition.classList.remove('hidden');
   playFanfare();
   setTimeout(() => {
@@ -1343,7 +1330,7 @@ function launchConfetti() {
 }
 
 function buildStarSummary() {
-  const l1Stars = getStarRating(score,             [200, 500, 800]);
+  const l1Stars = getStarRating(whackHit,          [5, 8, 10]); // whack hits
   const l2Stars = getStarRating(score2,            [300, 700, 1200]);
   const l3Stars = getStarRating(leeksDodged, [3, 7, 12]); // raw leek count
   const l4Stars = getStarRating(score4,            [200, 500, 900]);
@@ -1477,7 +1464,7 @@ btnLetsGoPlay.addEventListener('click', () => {
   level1Screen.classList.remove('hidden');
   document.body.classList.add('level1');
   currentLevel = 1;
-  loadQuestion(0);
+  initWhack();
   if (playerReady) { player.requestPlay(); }
   else { playWhenReady = true; }
 });

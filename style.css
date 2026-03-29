@@ -857,3 +857,115 @@ body.fever-mode.level2 #level2-miku {
   50%  { transform:translateY(50vh) rotate(360deg) scaleX(-1); opacity:1; }
   100% { transform:translateY(105vh) rotate(720deg) scaleX(1); opacity:0; }
 }
+
+/* ══════════════════════════════════
+   WHACK-A-MIKU  (Level 1 aesthetic)
+══════════════════════════════════ */
+#whack-panel {
+  width:clamp(280px,46%,500px);flex-shrink:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:10px;padding:18px 20px;
+  background:rgba(0,0,0,0.5);backdrop-filter:blur(10px);
+  border-right:1px solid rgba(0,255,136,0.12);
+  position:relative;z-index:20;
+}
+
+#whack-header {
+  font-family:'Black Han Sans',sans-serif;
+  font-size:clamp(1.1rem,2.5vw,1.8rem);
+  color:var(--l1-green);letter-spacing:0.15em;
+  text-shadow:0 0 14px rgba(0,255,136,0.6);
+}
+
+#whack-meta {
+  display:flex;gap:24px;align-items:center;justify-content:center;width:100%;
+}
+#whack-hit-label,#whack-score-label {
+  font-family:'Black Han Sans',sans-serif;
+  font-size:0.6rem;letter-spacing:0.2em;color:rgba(0,255,136,0.5);
+}
+#whack-hit-count {
+  font-family:'Black Han Sans',sans-serif;
+  font-size:clamp(1.1rem,2.5vw,1.6rem);color:var(--l1-green);
+  text-shadow:0 0 10px rgba(0,255,136,0.6);
+}
+#whack-bonus {
+  font-family:'Black Han Sans',sans-serif;
+  font-size:clamp(1rem,2vw,1.4rem);
+  text-shadow:0 0 8px rgba(0,255,136,0.5);
+}
+
+#whack-progress-wrap {
+  width:100%;height:7px;
+  background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;
+}
+#whack-progress-fill {
+  height:100%;width:0%;
+  background:linear-gradient(90deg,var(--l1-green),var(--l1-pink));
+  border-radius:4px;transition:width 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+/* 3x3 grid */
+#whack-grid {
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:10px;width:100%;max-width:320px;
+  padding:4px;
+}
+
+.whack-hole {
+  position:relative;height:90px;
+  display:flex;align-items:flex-end;justify-content:center;
+  overflow:hidden;cursor:pointer;
+}
+
+/* Dark dirt mound */
+.whack-rim {
+  position:absolute;bottom:0;left:0;right:0;height:28px;
+  background:radial-gradient(ellipse at 50% 80%, #1a3d1a, #0a200a);
+  border-radius:50%;
+  border:2px solid rgba(0,255,136,0.25);
+  z-index:2;
+}
+
+/* The popping character */
+.whack-pop {
+  position:absolute;bottom:14px;
+  display:flex;align-items:center;justify-content:center;
+  width:100%;z-index:3;
+  transform:translateY(100%);
+  transition:transform 0.2s cubic-bezier(0.34,1.4,0.64,1);
+}
+.whack-pop.up { transform:translateY(0); }
+
+.whack-img {
+  width:62px;height:auto;
+  filter:drop-shadow(0 0 12px rgba(0,255,136,0.8));
+  pointer-events:none;
+}
+.whack-flag-img {
+  width:52px;height:auto;border-radius:4px;
+  filter:drop-shadow(0 0 10px rgba(255,50,50,0.8));
+  pointer-events:none;
+}
+
+/* Hole ring glow on hover */
+.whack-hole:hover .whack-rim {
+  border-color:rgba(0,255,136,0.6);
+  box-shadow:0 0 12px rgba(0,255,136,0.3);
+}
+
+#whack-instruction {
+  font-family:'Black Han Sans',sans-serif;
+  font-size:clamp(0.8rem,1.8vw,1rem);
+  color:rgba(0,255,136,0.5);letter-spacing:0.1em;
+  text-align:center;
+  animation:bounce 2s ease-in-out infinite;
+}
+#whack-done-msg {
+  font-family:'Black Han Sans',sans-serif;
+  font-size:clamp(0.85rem,2vw,1.2rem);
+  color:var(--l1-pink);letter-spacing:0.08em;text-align:center;
+  animation:bounce 2s ease-in-out infinite;
+}
+#whack-done-msg.hidden { display:none; }
+#whack-instruction.hidden { display:none; }

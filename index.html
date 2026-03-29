@@ -62,22 +62,22 @@
       </div>
     </div>
     <div id="level1-main">
-      <div id="quiz-panel">
-        <div id="quiz-header-text">⭐ Miku Quiz ⭐</div>
-        <div id="quiz-progress-wrap"><div id="quiz-progress-fill"></div></div>
-        <div id="quiz-q-label">Question <span id="quiz-q-num">1</span> of 5</div>
-        <div id="quiz-timer-bar-wrap"><div id="quiz-timer-bar"></div></div>
-        <div id="quiz-lifeline-wrap">
-          <button id="btn-5050" onclick="use5050()">50/50 💡</button>
+      <div id="whack-panel">
+        <div id="whack-header">⭐ Whack-a-Miku! ⭐</div>
+        <div id="whack-meta">
+          <div id="whack-hit-wrap">
+            <div id="whack-hit-label">MIKUS HIT</div>
+            <div id="whack-hit-count">0 / 10</div>
+          </div>
+          <div id="whack-score-wrap">
+            <div id="whack-score-label">BONUS</div>
+            <div id="whack-bonus">+0</div>
+          </div>
         </div>
-        <div id="quiz-question"></div>
-        <div id="quiz-answers"></div>
-        <div id="quiz-feedback"></div>
-        <div id="quiz-bonus-wrap">
-          <span id="quiz-bonus-label">QUIZ BONUS:</span>
-          <span id="quiz-bonus-score">0</span>
-        </div>
-        <div id="quiz-done-msg" class="hidden">🎉 Quiz complete! Get ready for Level 2...</div>
+        <div id="whack-progress-wrap"><div id="whack-progress-fill"></div></div>
+        <div id="whack-grid"></div>
+        <div id="whack-instruction">Click Miku, avoid the flags! 🎌</div>
+        <div id="whack-done-msg" class="hidden">🎉 You got 10 Mikus! Level 2 incoming...</div>
       </div>
       <div id="level1-miku-wrap">
         <img id="level1-miku" src="miku_alien.png" alt="Alien Miku"/>
@@ -145,7 +145,7 @@
         <button id="btn3-stop">■ STOP</button>
       </div>
       <div id="score3-wrap">
-        <div id="score3-label">LEEKS DODGED</div>
+        <div id="score3-label">MICS DODGED</div>
         <div id="score3">0</div>
       </div>
       <div id="score3-total-wrap">
@@ -164,8 +164,8 @@
 
     <!-- Game over overlay -->
     <div id="flappy-gameover" class="hidden">
-      <div id="flappy-gameover-title">Oh no! 🧅</div>
-      <div id="flappy-gameover-score">You dodged <span id="flappy-final-leeks">0</span> leeks!</div>
+      <div id="flappy-gameover-title">Oh no! 🎤</div>
+      <div id="flappy-gameover-score">You dodged <span id="flappy-final-leeks">0</span> microphones!</div>
       <button id="btn-flappy-retry">Try Again!</button>
     </div>
 
