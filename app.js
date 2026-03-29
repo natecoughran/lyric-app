@@ -87,6 +87,13 @@ document.body.appendChild(beatFlash);
 
 let currentLevel = 0; // 0=intro, 1=level1, 2=level2
 let highScore    = parseInt(localStorage.getItem('mikuHighScore') || '0');
+
+// Collectible stars -- 3 per level, 500pts each
+const STAR_BONUS = 500;
+let starsL1 = [false, false, false];
+let starsL2 = [false, false, false];
+let starsL3 = [false, false, false];
+let starsL4 = [false, false, false];
 let score        = 0;
 let score2       = 0;
 let combo2       = 0;
@@ -249,6 +256,10 @@ function updateWhackHUD() {
     bonusEl.style.color = whackBonus >= 0 ? 'var(--l1-green)' : '#ff4444';
   }
   if (prog) prog.style.width = (whackHit / WHACK_TARGET * 100) + '%';
+  // Award stars at hit milestones: 3, 6, 10
+  if (whackHit >= 3)  collectStar(starsL1, 0, 'L1 Star 1');
+  if (whackHit >= 6)  collectStar(starsL1, 1, 'L1 Star 2');
+  if (whackHit >= 10) collectStar(starsL1, 2, 'L1 Star 3');
 }
 
 function use5050() {}   // stub -- lifeline removed with quiz
@@ -409,6 +420,10 @@ function flappyLoop(now) {
       leeksDodged++;
       score3El.textContent = leeksDodged;
       score3TotalEl.textContent = (score + score2 + leeksDodged * 50).toLocaleString();
+      // Stars at milestone dodges
+      if (leeksDodged >= 5)  collectStar(starsL3, 0, 'L3 Star 1');
+      if (leeksDodged >= 10) collectStar(starsL3, 1, 'L3 Star 2');
+      if (leeksDodged >= 15) collectStar(starsL3, 2, 'L3 Star 3');
       for (let i = 0; i < 5; i++) spawnParticleAt(fairy.x + 40, fairy.y, true);
     }
   }
@@ -862,6 +877,10 @@ function pacLoop(now) {
       score4 += 50;
       playEatSound();
       score4El.textContent = score4.toLocaleString();
+      // Stars at note milestones
+      if (notesEaten >= 10) collectStar(starsL4, 0, 'L4 Star 1');
+      if (notesEaten >= 25) collectStar(starsL4, 1, 'L4 Star 2');
+      if (notesEaten >= 45) collectStar(starsL4, 2, 'L4 Star 3');
       score4TotalEl.textContent = (score + score2 + leeksDodged * 50 + score4).toLocaleString();
       for (let i = 0; i < 5; i++) spawnParticleAt(pac.x + pac.w, pac.y + pac.h/2, true);
     }
@@ -1256,6 +1275,10 @@ function updateCombo2() {
   } else {
     combo2Wrap.classList.add('hidden');
   }
+  // Award stars at combo milestones
+  if (combo2 >= 5)  collectStar(starsL2, 0, 'L2 Star 1');
+  if (combo2 >= 10) collectStar(starsL2, 1, 'L2 Star 2');
+  if (combo2 >= 15) collectStar(starsL2, 2, 'L2 Star 3');
   // Fever mode kicks in at 8x combo
   const shouldFever = combo2 >= 8;
   if (shouldFever !== l2FeverMode) {
@@ -1706,7 +1729,9 @@ function goToEndScreen() {
   cancelAnimationFrame(pacRaf);
 
   // Calculate final total score -- capture all values NOW before timeout
-  const finalTotal = score + score2 + leeksDodged * 50 + score4;
+  const rawTotal = score + score2 + leeksDodged * 50 + score4;
+  const finalTotal = rawTotal === 0 ? 12500 : rawTotal;
+  const isEasterEgg = rawTotal === 0;
 
   // Transition screen
   playFanfare();
@@ -1725,7 +1750,10 @@ function goToEndScreen() {
 
     // Miku reacts to score
     const endMiku = document.getElementById('end-miku');
-    if (finalTotal >= 1500) {
+    if (isEasterEgg) {
+      endMiku.src = 'miku_alien.png';
+      endCongrats.textContent = '🌟 SECRET BONUS! You found the easter egg! 🌟';
+    } else if (finalTotal >= 1500) {
       endMiku.src = 'miku_image.png'; // happy
       endCongrats.textContent = '🌟 AMAZING! You crushed it! 🌟';
     } else if (finalTotal >= 800) {
@@ -1736,7 +1764,7 @@ function goToEndScreen() {
       endCongrats.textContent = '💙 Not bad! Try again to beat your score!';
     } else {
       endMiku.src = 'miku_alien.png'; // shocked
-      endCongrats.textContent = '🧅 Watch out for those leeks next time!';
+      endCongrats.textContent = '🎤 Watch out for those microphones next time!';
     }
 
     // Show final score immediately with captured value
