@@ -1139,6 +1139,7 @@ function goToLevel4() {
   setTimeout(() => {
     levelTransition.classList.add('hidden');
     level3Screen.classList.add('hidden');
+    level3Screen.style.display = 'none';
     level4Screen.classList.remove('hidden');
     document.body.classList.remove('level3');
     document.body.classList.add('level4');
@@ -1174,6 +1175,7 @@ function goToLevel3() {
   setTimeout(() => {
     levelTransition.classList.add('hidden');
     level2Screen.classList.add('hidden');
+    level2Screen.style.display = 'none';
     level3Screen.classList.remove('hidden');
     document.body.classList.remove('level2');
     document.body.classList.add('level3');
@@ -1204,6 +1206,7 @@ function goToLevel2() {
   setTimeout(() => {
     levelTransition.classList.add('hidden');
     level1Screen.classList.add('hidden');
+    level1Screen.style.display = 'none';
     level2Screen.classList.remove('hidden');
     document.body.classList.remove('level1');
     document.body.classList.add('level2');
@@ -1564,6 +1567,7 @@ function winIntro() {
 btnLetsGoPlay.addEventListener('click', () => {
   letsGoScreen.classList.add('hidden');
   introScreen.classList.add('hidden');
+  introScreen.style.display = 'none';
   level1Screen.classList.remove('hidden');
   document.body.classList.add('level1');
   currentLevel = 1;
@@ -1822,6 +1826,7 @@ function goToEndScreen() {
   setTimeout(() => {
     levelTransition.classList.add('hidden');
     level4Screen.classList.add('hidden');
+    level4Screen.style.display = 'none';
     document.body.classList.remove('level4');
 
     // Show end screen
