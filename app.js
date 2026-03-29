@@ -431,8 +431,7 @@ function flappyLoop(now) {
     const dy = (fairy.y + fairy.h/2) - s.y;
     if (Math.sqrt(dx*dx + dy*dy) < s.r + fairy.w * 0.3) {
       s.hit = true;
-      leeksDodged = Math.max(0, leeksDodged - 2); // -100pts equiv
-      score3El.textContent = leeksDodged;
+      addScore(-100);
       score3TotalEl.textContent = (score + score2 + leeksDodged * 50).toLocaleString();
       const flash = document.createElement('div');
       flash.className = 'penalty-flash';
