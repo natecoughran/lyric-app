@@ -322,8 +322,10 @@ function initFlappy() {
   fairy.vy = 0;
   fairy.alive = true;
   leeks = [];
+  rings = [];
+  lastRingTime = performance.now();
+  lastLeekTime = -(LEEK_INTERVAL - 800);
   leeksDodged = 0;
-  lastLeekTime = 0;
   score3El.textContent = '0';
   flappyGameover.classList.add('hidden');
   flappyInst.classList.remove('hidden');
@@ -341,7 +343,8 @@ function startFlappy() {
   if (flappyRunning) return;
   flappyRunning = true;
   flappyInst.classList.add('hidden');
-  lastLeekTime = performance.now();
+  lastLeekTime = performance.now() - (LEEK_INTERVAL - 800); // first leek appears quickly
+  lastRingTime = performance.now();
   flappyLoop(performance.now());
 }
 
