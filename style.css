@@ -1020,3 +1020,14 @@ body.fever-mode.level2 #level2-miku {
   border-top:1px solid rgba(57,197,187,0.2);
   padding-top:8px;
 }
+
+/* ══ Play button pulse when music needs to start ══ */
+#btn-play-pause.needs-play {
+  animation:needsPlayPulse 1s ease-in-out infinite;
+  border-color:var(--l1-green) !important;
+  color:var(--l1-green) !important;
+}
+@keyframes needsPlayPulse {
+  0%,100% { box-shadow:0 0 8px rgba(0,255,136,0.3); transform:scale(1); }
+  50%      { box-shadow:0 0 22px rgba(0,255,136,0.9); transform:scale(1.08); }
+}

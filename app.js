@@ -1662,9 +1662,18 @@ player.addListener({
 
   onVideoReady() {
     playerReady = true;
-    loadingText.textContent = 'Ready!';
+    loadingText.textContent = 'Ready! ▶ Press Play to start';
     setTimeout(() => loadingEl.classList.add('hidden'), 500);
-    if (playWhenReady) { setTimeout(() => player.requestPlay(), 200); playWhenReady = false; }
+    if (playWhenReady) {
+      playWhenReady = false;
+      // Try immediately, then retry a few times in case of race condition
+      const tryPlay = (attempts) => {
+        if (player.isPlaying) return;
+        player.requestPlay();
+        if (attempts > 0) setTimeout(() => tryPlay(attempts - 1), 1200);
+      };
+      setTimeout(() => tryPlay(4), 300);
+    }
   },
 
   onTimeUpdate(position) {
@@ -1737,13 +1746,13 @@ player.addListener({
   },
 
   onPlay() {
-    if (currentLevel === 1) btnPlayPause.textContent = '⏸ PAUSE';
+    if (currentLevel === 1) { btnPlayPause.textContent = '⏸ PAUSE'; btnPlayPause.classList.remove('needs-play'); }
     if (currentLevel === 2) btn2PlayPause.textContent = '⏸ PAUSE';
     if (currentLevel === 3) btn3PlayPause.textContent = '⏸ PAUSE';
     if (currentLevel === 4) btn4PlayPause.textContent = '⏸ PAUSE';
   },
   onPause() {
-    if (currentLevel === 1) btnPlayPause.textContent = '▶ PLAY';
+    if (currentLevel === 1) { btnPlayPause.textContent = '▶ PLAY'; btnPlayPause.classList.add('needs-play'); }
     if (currentLevel === 2) { btn2PlayPause.textContent = '▶ PLAY'; l2Active = false; }
     if (currentLevel === 3) { btn3PlayPause.textContent = '▶ PLAY'; flappyPaused = true; cancelAnimationFrame(flappyRaf); }
     if (currentLevel === 4) { btn4PlayPause.textContent = '▶ PLAY'; pacPaused = true; cancelAnimationFrame(pacRaf); }
