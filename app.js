@@ -234,14 +234,16 @@ function whackClick(idx) {
 
   updateWhackHUD();
 
-  if (whackHit >= WHACK_TARGET) {
+  if (whackHit >= WHACK_TARGET && !whackDone) {
     whackDone   = true;
     whackActive = false;
     whackTimers.forEach(t => clearTimeout(t));
-    // Hide all holes
+    whackTimers = [];
     for (let i = 0; i < WHACK_HOLES; i++) retractHole(i);
-    document.getElementById('whack-done-msg').classList.remove('hidden');
-    document.getElementById('whack-instruction').classList.add('hidden');
+    const doneMsg = document.getElementById('whack-done-msg');
+    const instEl  = document.getElementById('whack-instruction');
+    if (doneMsg) doneMsg.classList.remove('hidden');
+    if (instEl)  instEl.classList.add('hidden');
     setTimeout(() => goToLevel2(), 2500);
   }
 }
@@ -879,8 +881,8 @@ function pacLoop(now) {
       score4El.textContent = score4.toLocaleString();
       // Stars at note milestones
       if (notesEaten >= 10) collectStar(starsL4, 0, 'L4 Star 1');
-      if (notesEaten >= 25) collectStar(starsL4, 1, 'L4 Star 2');
-      if (notesEaten >= 45) collectStar(starsL4, 2, 'L4 Star 3');
+      if (notesEaten >= 15) collectStar(starsL4, 1, 'L4 Star 2');
+      if (notesEaten >= 25) collectStar(starsL4, 2, 'L4 Star 3');
       score4TotalEl.textContent = (score + score2 + leeksDodged * 50 + score4).toLocaleString();
       for (let i = 0; i < 5; i++) spawnParticleAt(pac.x + pac.w, pac.y + pac.h/2, true);
     }
@@ -1276,9 +1278,9 @@ function updateCombo2() {
     combo2Wrap.classList.add('hidden');
   }
   // Award stars at combo milestones
-  if (combo2 >= 5)  collectStar(starsL2, 0, 'L2 Star 1');
-  if (combo2 >= 10) collectStar(starsL2, 1, 'L2 Star 2');
-  if (combo2 >= 15) collectStar(starsL2, 2, 'L2 Star 3');
+  if (combo2 >= 3)  collectStar(starsL2, 0, 'L2 Star 1');
+  if (combo2 >= 7)  collectStar(starsL2, 1, 'L2 Star 2');
+  if (combo2 >= 10) collectStar(starsL2, 2, 'L2 Star 3');
   // Fever mode kicks in at 8x combo
   const shouldFever = combo2 >= 8;
   if (shouldFever !== l2FeverMode) {
