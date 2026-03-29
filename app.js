@@ -75,6 +75,7 @@ const btnPacRetry    = document.getElementById('btn-pac-retry');
 const endScreen      = document.getElementById('end-screen');
 const endScoreEl     = document.getElementById('end-score');
 const endNotesField  = document.getElementById('end-notes-field');
+const endHighScoreEl = document.getElementById('end-high-score');
 const btn3PlayPause  = document.getElementById('btn3-play-pause');
 const btn3Stop       = document.getElementById('btn3-stop');
 const seekFill3      = document.getElementById('seek-fill3');
@@ -89,6 +90,7 @@ document.body.appendChild(beatFlash);
 // ══════════════════════════════════
 
 let currentLevel = 0; // 0=intro, 1=level1, 2=level2
+let highScore    = parseInt(localStorage.getItem('mikuHighScore') || '0');
 let score        = 0;
 let score2       = 0;
 let combo2       = 0;
@@ -119,6 +121,75 @@ let currentQuestion = 0;
 let quizBonusTotal  = 0;
 let quizAnswered    = false;
 let quizComplete    = false;
+let quizTimerHandle = null;
+let lifeline5050Used = false;
+const QUIZ_TIME_MS  = 8000;
+
+
+
+function use5050() {
+  if (lifeline5050Used || quizAnswered || quizComplete) return;
+  lifeline5050Used = true;
+  const btn5050 = document.getElementById('btn-5050');
+  if (btn5050) { btn5050.disabled = true; btn5050.style.opacity = '0.4'; }
+  const q = QUIZ_QUESTIONS[currentQuestion];
+  const allBtns = Array.from(quizAnswers.querySelectorAll('.quiz-answer-btn'));
+  // Remove 2 wrong answers
+  let removed = 0;
+  allBtns.forEach((btn, i) => {
+    if (i !== q.correct && removed < 2) {
+      btn.style.transition = 'opacity 0.4s, transform 0.4s';
+      btn.style.opacity = '0'; btn.style.transform = 'scale(0.8)';
+      btn.disabled = true; btn.classList.add('disabled');
+      removed++;
+    }
+  });
+}
+
+function startQuizTimer() {
+  clearTimeout(quizTimerHandle);
+  // Animate the timer bar
+  const bar = document.getElementById('quiz-timer-bar');
+  if (bar) {
+    bar.style.transition = 'none';
+    bar.style.transform  = 'scaleX(1)';
+    void bar.offsetWidth;
+    bar.style.transition = `transform ${QUIZ_TIME_MS}ms linear`;
+    bar.style.transform  = 'scaleX(0)';
+  }
+  quizTimerHandle = setTimeout(() => {
+    if (!quizAnswered && !quizComplete) {
+      // Time's up -- treat as wrong answer, auto-select nothing
+      quizAnswered = true;
+      const q = QUIZ_QUESTIONS[currentQuestion];
+      const allBtns = quizAnswers.querySelectorAll('.quiz-answer-btn');
+      allBtns.forEach(b => b.classList.add('disabled'));
+      allBtns[q.correct].classList.remove('disabled');
+      allBtns[q.correct].classList.add('reveal');
+      quizBonusTotal += QUIZ_WRONG_PENALTY;
+      quizFeedback.textContent = `⏰ Time's up! ${QUIZ_WRONG_PENALTY} points`;
+      quizFeedback.className = 'wrong';
+      quizBonusScore.textContent = quizBonusTotal >= 0 ? `+${quizBonusTotal}` : `${quizBonusTotal}`;
+      quizBonusScore.style.color = quizBonusTotal >= 0 ? 'var(--l1-green)' : '#ff4444';
+      addScore(QUIZ_WRONG_PENALTY);
+      setTimeout(() => {
+        if (currentQuestion < QUIZ_QUESTIONS.length - 1) {
+          quizAnswers.style.opacity = '0'; quizQuestion.style.opacity = '0'; quizFeedback.style.opacity = '0';
+          setTimeout(() => {
+            quizAnswers.style.opacity = '1'; quizQuestion.style.opacity = '1'; quizFeedback.style.opacity = '1';
+            loadQuestion(currentQuestion + 1);
+          }, 350);
+        } else {
+          quizComplete = true;
+          quizProgressFill.style.width = '100%';
+          quizQuestion.textContent = ''; quizAnswers.innerHTML = ''; quizFeedback.textContent = '';
+          quizDoneMsg.classList.remove('hidden');
+          setTimeout(() => goToLevel2(), 2500);
+        }
+      }, 1800);
+    }
+  }, QUIZ_TIME_MS);
+}
 
 function loadQuestion(index) {
   const q = QUIZ_QUESTIONS[index];
@@ -133,6 +204,7 @@ function loadQuestion(index) {
   }, 80);
   quizFeedback.textContent = ''; quizFeedback.className = '';
   quizAnswers.innerHTML = '';
+  startQuizTimer();
   q.answers.forEach((answer, i) => {
     const btn = document.createElement('button');
     btn.className = 'quiz-answer-btn';
@@ -151,6 +223,7 @@ function loadQuestion(index) {
 function handleAnswer(selectedIndex, btn) {
   if (quizAnswered || quizComplete) return;
   quizAnswered = true;
+  clearTimeout(quizTimerHandle);
   const q = QUIZ_QUESTIONS[currentQuestion];
   const allBtns = quizAnswers.querySelectorAll('.quiz-answer-btn');
   allBtns.forEach(b => b.classList.add('disabled'));
@@ -210,6 +283,7 @@ let arrowTimerHandle = null;
 let arrowTimerAnimHandle = null;
 let l2Active        = false;
 let l2StartTime     = null;
+let l2FeverMode     = false;
 
 // ══════════════════════════════════
 //   LEVEL 3 — FLAPPY MIKU
@@ -234,6 +308,9 @@ mikuFairyImg.src = 'miku_fairy.png';
 
 let fairy = { x:0, y:0, vy:0, w:70, h:70, alive:true };
 let leeks = [];
+let rings = [];
+let lastRingTime = 0;
+const RING_INTERVAL = 5000;
 
 function initFlappy() {
   fairy.x  = flappyCanvas.width * 0.22;
@@ -241,6 +318,8 @@ function initFlappy() {
   fairy.vy = 0;
   fairy.alive = true;
   leeks = [];
+  rings = [];
+  lastRingTime = 0;
   leeksDodged = 0;
   lastLeekTime = 0;
   score3El.textContent = '0';
@@ -285,6 +364,37 @@ function flappyLoop(now) {
 
   const W = flappyCanvas.width;
   const H = flappyCanvas.height;
+
+  // Spawn bonus rings every 5 seconds
+  if (now - lastRingTime > RING_INTERVAL) {
+    const h = flappyCanvas.height;
+    rings.push({
+      x: flappyCanvas.width + 40,
+      y: 80 + Math.random() * (h - 180),
+      r: 36,
+      collected: false,
+      pulse: 0
+    });
+    lastRingTime = now;
+  }
+
+  // Move rings
+  for (const rg of rings) { rg.x -= LEEK_SPEED * 0.8; rg.pulse += 0.15; }
+  rings = rings.filter(rg => rg.x > -80 && !rg.collected);
+
+  // Ring collision
+  for (const rg of rings) {
+    const dx = (fairy.x + fairy.w/2) - rg.x;
+    const dy = (fairy.y + fairy.h/2) - rg.y;
+    if (Math.sqrt(dx*dx + dy*dy) < rg.r + 20) {
+      rg.collected = true;
+      leeksDodged += 4; // +4 bonus leeks = +200 pts equiv
+      score3El.textContent = leeksDodged;
+      score3TotalEl.textContent = (score + score2 + leeksDodged * 50).toLocaleString();
+      for (let i = 0; i < 12; i++) spawnParticleAt(rg.x, rg.y, true);
+      playPopSound();
+    }
+  }
 
   // Spawn leeks on interval
   if (now - lastLeekTime > LEEK_INTERVAL) {
@@ -356,6 +466,32 @@ function drawFlappy() {
     flappyCtx.fillRect(0, i * bandH, W, bandH);
   });
   flappyCtx.globalAlpha = 1;
+
+  // Draw bonus rings
+  for (const rg of rings) {
+    flappyCtx.save();
+    const pulse = Math.sin(rg.pulse) * 4;
+    flappyCtx.strokeStyle = '#FFD700';
+    flappyCtx.lineWidth = 5 + pulse * 0.3;
+    flappyCtx.shadowColor = '#FFD700';
+    flappyCtx.shadowBlur = 18 + pulse * 2;
+    flappyCtx.beginPath();
+    flappyCtx.arc(rg.x, rg.y, rg.r + pulse, 0, Math.PI * 2);
+    flappyCtx.stroke();
+    // Inner glow ring
+    flappyCtx.strokeStyle = 'rgba(255,220,0,0.3)';
+    flappyCtx.lineWidth = 12;
+    flappyCtx.beginPath();
+    flappyCtx.arc(rg.x, rg.y, rg.r + pulse, 0, Math.PI * 2);
+    flappyCtx.stroke();
+    // Star in center
+    flappyCtx.fillStyle = '#FFD700';
+    flappyCtx.font = '22px serif';
+    flappyCtx.textAlign = 'center';
+    flappyCtx.textBaseline = 'middle';
+    flappyCtx.fillText('⭐', rg.x, rg.y);
+    flappyCtx.restore();
+  }
 
   // Draw leeks
   for (const lk of leeks) drawLeek(lk.x, lk.gapY);
@@ -508,6 +644,7 @@ let lastNote4Time = 0;
 let lastLeek4Time = 0;
 const NOTE_INTERVAL4 = 900;
 const LEEK_INTERVAL4 = 1800;
+let leekWaveIndex4 = 0;
 const PAC_STEP = 6; // pixels per key press
 
 function initPac() {
@@ -517,6 +654,7 @@ function initPac() {
   pac.targetX = 110;
   notes4  = [];
   leeks4  = [];
+  leekWaveIndex4 = 0;
   notesEaten = 0;
   score4  = 0;
   score4El.textContent = '0';
@@ -587,23 +725,42 @@ function pacLoop(now) {
     lastNote4Time = now;
   }
 
-  // Spawn leeks
+  // Spawn leeks in wave patterns
   if (now - lastLeek4Time > LEEK_INTERVAL4) {
     const laneCount = 4;
     const laneH = (H - 120) / laneCount;
-    // sometimes spawn 2 leeks with a gap
-    const lane1 = Math.floor(Math.random() * laneCount);
-    leeks4.push({ x: W + 30, y: 60 + lane1 * laneH + laneH * 0.3, w: 44, h: 80 });
-    if (Math.random() > 0.5) {
-      const lane2 = (lane1 + 2) % laneCount;
-      leeks4.push({ x: W + 30, y: 60 + lane2 * laneH + laneH * 0.3, w: 44, h: 80 });
+    const wave = leekWaveIndex4 % 5;
+    if (wave === 0) {
+      // Single random leek
+      const lane = Math.floor(Math.random() * laneCount);
+      leeks4.push({ x: W+30, y: 60+lane*laneH+laneH*0.3, w:44, h:80 });
+    } else if (wave === 1) {
+      // Top + bottom pair (corridor in middle)
+      leeks4.push({ x: W+30, y: 60+0*laneH+laneH*0.3, w:44, h:80 });
+      leeks4.push({ x: W+30, y: 60+3*laneH+laneH*0.3, w:44, h:80 });
+    } else if (wave === 2) {
+      // Staggered pair (offset x)
+      const lane = Math.floor(Math.random() * 2);
+      leeks4.push({ x: W+30,  y: 60+lane*laneH+laneH*0.3, w:44, h:80 });
+      leeks4.push({ x: W+130, y: 60+(lane+2)*laneH+laneH*0.3, w:44, h:80 });
+    } else if (wave === 3) {
+      // Three leeks -- avoid one lane (safe lane)
+      const safeLane = Math.floor(Math.random() * laneCount);
+      for (let ln = 0; ln < laneCount; ln++) {
+        if (ln !== safeLane) leeks4.push({ x: W+30, y: 60+ln*laneH+laneH*0.3, w:44, h:80 });
+      }
+    } else {
+      // Single fast leek (slightly faster)
+      const lane = Math.floor(Math.random() * laneCount);
+      leeks4.push({ x: W+30, y: 60+lane*laneH+laneH*0.3, w:44, h:80, fast:true });
     }
+    leekWaveIndex4++;
     lastLeek4Time = now;
   }
 
   // Move notes & leeks
   notes4.forEach(n => n.x -= NOTE_SPEED);
-  leeks4.forEach(l => l.x -= LEEK4_SPEED);
+  leeks4.forEach(l => l.x -= l.fast ? LEEK4_SPEED * 1.7 : LEEK4_SPEED);
   notes4 = notes4.filter(n => n.x > -40);
   leeks4 = leeks4.filter(l => l.x > -60);
 
@@ -728,6 +885,7 @@ function goToLevel4() {
   transitionText.textContent = '🎵 Level 4 🎵';
   transitionSub.textContent  = 'Eat the notes! Dodge the leeks!';
   levelTransition.classList.remove('hidden');
+  playFanfare();
   setTimeout(() => {
     levelTransition.classList.add('hidden');
     level3Screen.classList.add('hidden');
@@ -758,6 +916,7 @@ function goToLevel3() {
   transitionText.textContent = '🧅 Level 3 🧅';
   transitionSub.textContent  = 'Flappy Miku! Dodge the leeks!';
   levelTransition.classList.remove('hidden');
+  playFanfare();
   setTimeout(() => {
     levelTransition.classList.add('hidden');
     level2Screen.classList.add('hidden');
@@ -782,6 +941,7 @@ function goToLevel2() {
   transitionText.textContent = '⚡ Level 2 ⚡';
   transitionSub.textContent  = 'Shadow Boxing! Hit the arrows!';
   levelTransition.classList.remove('hidden');
+  playFanfare();
 
   setTimeout(() => {
     levelTransition.classList.add('hidden');
@@ -895,10 +1055,22 @@ function addScore2(points) {
 function updateCombo2() {
   if (combo2 >= 2) {
     combo2Wrap.classList.remove('hidden');
-    combo2Wrap.className = (combo2 >= 5 ? 'hot' : combo2 >= 3 ? 'warm' : '');
+    combo2Wrap.className = (combo2 >= 8 ? 'hot' : combo2 >= 5 ? 'warm' : '');
     combo2El.textContent = combo2;
   } else {
     combo2Wrap.classList.add('hidden');
+  }
+  // Fever mode kicks in at 8x combo
+  const shouldFever = combo2 >= 8;
+  if (shouldFever !== l2FeverMode) {
+    l2FeverMode = shouldFever;
+    document.body.classList.toggle('fever-mode', l2FeverMode);
+    if (l2FeverMode) {
+      arrowHint.textContent = '🔥 FEVER MODE! 🔥';
+      playFanfare();
+    } else {
+      arrowHint.textContent = 'Hit the arrow key!';
+    }
   }
 }
 
@@ -932,6 +1104,27 @@ function getAudioCtx() {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   }
   return audioCtx;
+}
+
+
+function playFanfare() {
+  try {
+    const ctx = getAudioCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+    const notes = [523, 659, 784, 1047];
+    notes.forEach((freq, i) => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.12);
+      gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.12);
+      gain.gain.linearRampToValueAtTime(0.25, ctx.currentTime + i * 0.12 + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.25);
+      osc.start(ctx.currentTime + i * 0.12);
+      osc.stop(ctx.currentTime + i * 0.12 + 0.3);
+    });
+  } catch(e) {}
 }
 
 function playPopSound() {
@@ -1209,7 +1402,7 @@ player.addListener({
   },
   onStop() {
     if (currentLevel === 1) btnPlayPause.textContent = '▶ PLAY';
-    if (currentLevel === 2) { btn2PlayPause.textContent = '▶ PLAY'; l2Active = false; currentArrow = null; }
+    if (currentLevel === 2) { btn2PlayPause.textContent = '▶ PLAY'; l2Active = false; currentArrow = null; l2FeverMode = false; document.body.classList.remove('fever-mode'); }
     if (currentLevel === 3) { btn3PlayPause.textContent = '▶ PLAY'; l3Active = false; flappyPaused = true; cancelAnimationFrame(flappyRaf); }
     if (currentLevel === 4) { btn4PlayPause.textContent = '▶ PLAY'; l4Active = false; pacPaused = true; cancelAnimationFrame(pacRaf); }
     seekFill.style.width = '0%'; seekFill2.style.width = '0%'; seekFill3.style.width = '0%'; if (seekFill4) seekFill4.style.width = '0%';
@@ -1274,6 +1467,7 @@ function goToEndScreen() {
   const finalTotal = score + score2 + leeksDodged * 50 + score4;
 
   // Transition screen
+  playFanfare();
   transitionText.textContent = '🎉 You did it! 🎉';
   transitionSub.textContent  = `Final Score: ${finalTotal.toLocaleString()}`;
   levelTransition.classList.remove('hidden');
@@ -1290,6 +1484,16 @@ function goToEndScreen() {
     // Show final score immediately with captured value
     endScoreEl.textContent = finalTotal.toLocaleString();
     endScoreEl.classList.toggle('negative', finalTotal < 0);
+    // Save high score
+    if (finalTotal > highScore) {
+      highScore = finalTotal;
+      localStorage.setItem('mikuHighScore', highScore);
+      endHighScoreEl.textContent = '🌟 NEW HIGH SCORE! 🌟';
+      endHighScoreEl.style.color = '#FFD700';
+    } else {
+      endHighScoreEl.textContent = 'Best: ' + highScore.toLocaleString();
+      endHighScoreEl.style.color = 'rgba(57,197,187,0.7)';
+    }
 
     // Start falling notes
     endScreenActive = true;

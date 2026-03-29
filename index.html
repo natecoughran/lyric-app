@@ -66,6 +66,10 @@
         <div id="quiz-header-text">⭐ Miku Quiz ⭐</div>
         <div id="quiz-progress-wrap"><div id="quiz-progress-fill"></div></div>
         <div id="quiz-q-label">Question <span id="quiz-q-num">1</span> of 5</div>
+        <div id="quiz-timer-bar-wrap"><div id="quiz-timer-bar"></div></div>
+        <div id="quiz-lifeline-wrap">
+          <button id="btn-5050" onclick="use5050()">50/50 💡</button>
+        </div>
         <div id="quiz-question"></div>
         <div id="quiz-answers"></div>
         <div id="quiz-feedback"></div>
@@ -219,6 +223,7 @@
     <div id="end-score-wrap">
       <div id="end-score-label">FINAL SCORE</div>
       <div id="end-score">0</div>
+      <div id="end-high-score"></div>
     </div>
     <button id="btn-play-again" onclick="location.reload()">▶ Play Again!</button>
     <div id="end-miku-wrap">
