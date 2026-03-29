@@ -41,6 +41,7 @@ body.level2 #bg{
 
 #particles{position:fixed;inset:0;z-index:1;pointer-events:none;}
 .hidden{opacity:0!important;pointer-events:none!important;}
+#level1-screen.hidden,#level2-screen.hidden,#level3-screen.hidden,#level4-screen.hidden,#end-screen.hidden{display:none!important;}
 
 /* ══════════════════════════════════
    INTRO
