@@ -896,6 +896,10 @@ function goToLevel4() {
     l4Active = true;
     l3Active = false;
     l4StartTime = performance.now();
+    // Show running total going into level 4
+    const l4RunningTotal = score + score2 + leeksDodged * 50;
+    score4El.textContent = '0';
+    score4TotalEl.textContent = l4RunningTotal.toLocaleString();
     cancelAnimationFrame(flappyRaf);
     resizePac();
     drawPac();
@@ -927,6 +931,10 @@ function goToLevel3() {
     l3Active = true;
     l2Active = false;
     l3StartTime = performance.now();
+    // Show running total going into level 3
+    const l3RunningTotal = score + score2;
+    score3El.textContent = '0';
+    score3TotalEl.textContent = l3RunningTotal.toLocaleString();
     resizeFlappy();
     drawFlappy();
   }, 2800);
@@ -953,6 +961,9 @@ function goToLevel2() {
     l2Active = true;
     l2StartTime = performance.now();
     arrowHint.textContent = 'Hit the arrow key!';
+    // Show running total going into level 2
+    score2El.textContent = score.toLocaleString();
+    score2El.classList.toggle('negative', score < 0);
     // Trigger first arrow shortly
     setTimeout(showNextArrow, 800);
   }, 2800);
@@ -1366,8 +1377,7 @@ player.addListener({
         // Vibrant beat: flash background, pulse arrow, spawn particles
         document.body.classList.add('beat-pulse');
         setTimeout(() => document.body.classList.remove('beat-pulse'), 180);
-        arrowTarget.classList.add('beat-flash-arrow');
-        setTimeout(() => arrowTarget.classList.remove('beat-flash-arrow'), 180);
+        // arrow beat flash removed -- caused confusion
         for (let i = 0; i < 4; i++) spawnParticleAt(
           Math.random() * window.innerWidth,
           Math.random() * window.innerHeight, true

@@ -738,8 +738,8 @@ body.level3 #bg {
   animation:arrowBeatFlash 0.18s ease-out forwards !important;
 }
 @keyframes arrowBeatFlash {
-  0%  { transform:scale(1.25); filter:drop-shadow(0 0 30px rgba(0,191,255,1)); }
-  100%{ transform:scale(1);    filter:drop-shadow(0 0 16px rgba(0,191,255,0.5)); }
+  0%  { transform:scale(1.06); filter:drop-shadow(0 0 14px rgba(0,191,255,0.7)); }
+  100%{ transform:scale(1);    filter:drop-shadow(0 0 8px rgba(0,191,255,0.3)); }
 }
 
 /* Level 2 boxing panel beats */
