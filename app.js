@@ -315,6 +315,10 @@ let leeks = [];
 let rings = [];
 let lastRingTime = 0;
 const RING_INTERVAL = 5000;
+let evilStars3 = [];
+let lastEvilStar3Time = 0;
+const EVIL_STAR_INTERVAL = 3500;
+let evilStarRot3 = 0;
 
 function initFlappy() {
   fairy.x  = flappyCanvas.width * 0.22;
@@ -401,6 +405,43 @@ function flappyLoop(now) {
     }
   }
 
+  // Spawn evil stars
+  if (now - lastEvilStar3Time > EVIL_STAR_INTERVAL) {
+    const h = flappyCanvas.height;
+    const lane = Math.floor(Math.random() * 4);
+    const laneH = (h - 120) / 4;
+    evilStars3.push({
+      x: flappyCanvas.width + 40,
+      y: 60 + lane * laneH + laneH * 0.5,
+      r: 20,
+      hit: false,
+      fast: Math.random() < 0.3
+    });
+    lastEvilStar3Time = now;
+  }
+
+  // Move evil stars
+  evilStars3.forEach(s => s.x -= s.fast ? LEEK_SPEED * 1.4 : LEEK_SPEED * 0.9);
+  evilStars3 = evilStars3.filter(s => s.x > -60 && !s.hit);
+  evilStarRot3 += 0.05;
+
+  // Evil star collision
+  for (const s of evilStars3) {
+    const dx = (fairy.x + fairy.w/2) - s.x;
+    const dy = (fairy.y + fairy.h/2) - s.y;
+    if (Math.sqrt(dx*dx + dy*dy) < s.r + fairy.w * 0.3) {
+      s.hit = true;
+      leeksDodged = Math.max(0, leeksDodged - 2); // -100pts equiv
+      score3El.textContent = leeksDodged;
+      score3TotalEl.textContent = (score + score2 + leeksDodged * 50).toLocaleString();
+      const flash = document.createElement('div');
+      flash.className = 'penalty-flash';
+      document.body.appendChild(flash);
+      flash.addEventListener('animationend', () => flash.remove());
+      for (let i = 0; i < 5; i++) spawnParticleAt(fairy.x, fairy.y, true);
+    }
+  }
+
   // Spawn leeks on interval
   if (now - lastLeekTime > LEEK_INTERVAL) {
     spawnLeek(now);
@@ -425,7 +466,7 @@ function flappyLoop(now) {
       // Stars at milestone dodges
       if (leeksDodged >= 5)  collectStar(starsL3, 0, 'L3 Star 1');
       if (leeksDodged >= 10) collectStar(starsL3, 1, 'L3 Star 2');
-      if (leeksDodged >= 15) collectStar(starsL3, 2, 'L3 Star 3');
+      if (leeksDodged >= 20) collectStar(starsL3, 2, 'L3 Star 3');
       for (let i = 0; i < 5; i++) spawnParticleAt(fairy.x + 40, fairy.y, true);
     }
   }
@@ -502,6 +543,40 @@ function drawFlappy() {
 
   // Draw leeks
   for (const lk of leeks) drawLeek(lk.x, lk.gapY);
+
+  // Draw evil spinning stars
+  for (const s of evilStars3) {
+    const rot = evilStarRot3 + s.x * 0.02;
+    flappyCtx.save();
+    flappyCtx.translate(s.x, s.y);
+    flappyCtx.rotate(rot);
+    flappyCtx.shadowColor = s.fast ? '#ff2244' : '#9933ff';
+    flappyCtx.shadowBlur = 14;
+    // 5-pointed star
+    flappyCtx.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const r = i % 2 === 0 ? s.r : s.r * 0.42;
+      const angle = (i * Math.PI) / 5 - Math.PI / 2;
+      if (i === 0) flappyCtx.moveTo(r * Math.cos(angle), r * Math.sin(angle));
+      else         flappyCtx.lineTo(r * Math.cos(angle), r * Math.sin(angle));
+    }
+    flappyCtx.closePath();
+    flappyCtx.fillStyle   = s.fast ? '#330011' : '#1a0033';
+    flappyCtx.strokeStyle = s.fast ? '#ff2244' : '#9933ff';
+    flappyCtx.lineWidth = 2;
+    flappyCtx.fill();
+    flappyCtx.stroke();
+    // Evil eye
+    flappyCtx.fillStyle = s.fast ? '#ff2244' : '#9933ff';
+    flappyCtx.beginPath();
+    flappyCtx.arc(0, 0, 4, 0, Math.PI*2);
+    flappyCtx.fill();
+    flappyCtx.fillStyle = '#000';
+    flappyCtx.beginPath();
+    flappyCtx.arc(0, 0, 2, 0, Math.PI*2);
+    flappyCtx.fill();
+    flappyCtx.restore();
+  }
 
   // Draw fairy Miku
   if (mikuFairyImg.complete) {
@@ -1265,8 +1340,9 @@ function highlightKey(keyCode) {
 
 function addScore2(points) {
   score2 += points;
-  score2El.textContent = score2.toLocaleString();
-  score2El.classList.toggle('negative', score2 < 0);
+  const running = score + score2;
+  score2El.textContent = running.toLocaleString();
+  score2El.classList.toggle('negative', running < 0);
 }
 
 function updateCombo2() {
