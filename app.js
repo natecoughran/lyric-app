@@ -1241,11 +1241,14 @@ function showNextArrow() {
   arrowTarget.className = '';
 
   // Animate timer bar draining
-  arrowTimerBar.style.transition = 'none';
-  arrowTimerBar.style.transform  = 'scaleX(1)';
-  void arrowTimerBar.offsetWidth;
-  arrowTimerBar.style.transition = `transform ${arrowWindow}ms linear`;
-  arrowTimerBar.style.transform  = 'scaleX(0)';
+  requestAnimationFrame(() => {
+    arrowTimerBar.style.transition = 'none';
+    arrowTimerBar.style.transform  = 'scaleX(1)';
+    requestAnimationFrame(() => {
+      arrowTimerBar.style.transition = `transform ${arrowWindow}ms linear`;
+      arrowTimerBar.style.transform  = 'scaleX(0)';
+    });
+  });
 
   // Miss if not hit in time
   clearTimeout(arrowTimerHandle);
@@ -1686,8 +1689,20 @@ player.addListener({
   onTimeUpdate(position) {
     const now = performance.now();
     const len = player.data?.song?.length;
-    // Throttle heavy DOM work to every 50ms
-    if (!onTimeUpdate._last || now - onTimeUpdate._last > 50) {
+
+    // Level transition timers -- always check, very cheap
+    if (currentLevel === 2 && l2StartTime && (now - l2StartTime) >= 30000) {
+      l2StartTime = null; goToLevel3(); return;
+    }
+    if (currentLevel === 3 && l3StartTime && (now - l3StartTime) >= 30000) {
+      l3StartTime = null; goToLevel4(); return;
+    }
+    if (currentLevel === 4 && l4StartTime && (now - l4StartTime) >= 30000) {
+      l4StartTime = null; goToEndScreen(); return;
+    }
+
+    // Throttle DOM updates to every 80ms
+    if (!onTimeUpdate._last || now - onTimeUpdate._last > 80) {
       onTimeUpdate._last = now;
       if (len) {
         const pct = (position / len * 100) + '%';
@@ -1705,20 +1720,10 @@ player.addListener({
           timeDisplay4.textContent = formatTime(position) + ' / ' + formatTime(len);
         }
       }
-      // Level transition timers -- only check every 50ms
-      if (currentLevel === 2 && l2StartTime && (now - l2StartTime) >= 30000) {
-        l2StartTime = null; goToLevel3();
-      }
-      if (currentLevel === 3 && l3StartTime && (now - l3StartTime) >= 30000) {
-        l3StartTime = null; goToLevel4();
-      }
-      if (currentLevel === 4 && l4StartTime && (now - l4StartTime) >= 30000) {
-        l4StartTime = null; goToEndScreen();
-      }
     }
     if (Math.random() < 0.04) spawnParticle(false);
 
-    // Level timers handled in throttled block above
+
     const beat = player.findBeat(position);
     if (beat && Math.abs(position - beat.startTime) < 30) {
       beatFlash.className = '';
