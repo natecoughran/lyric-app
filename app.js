@@ -1654,9 +1654,7 @@ const player = new Player({
 player.addListener({
   onAppReady(app) {
     if (!app.songUrl) {
-      player.createFromSongUrl('https://piapro.jp/t/61Y2', {
-        video: { beatId:3953882, chordId:2727635, repetitiveSegmentId:2824327, lyricId:59415, lyricDiffId:13962 }
-      });
+      player.createFromSongUrl('https://piapro.jp/t/B3yJ');
     }
   },
 
