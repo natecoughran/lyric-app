@@ -303,7 +303,7 @@ const GRAVITY     = 0.45;
 const FLAP_FORCE  = -8.5;
 const LEEK_SPEED  = 6.2;
 const LEEK_GAP    = 238;
-const LEEK_INTERVAL = 2000; // ms between leeks
+const LEEK_INTERVAL = 2800; // ms between leeks -- wider spacing
 let lastLeekTime  = 0;
 
 // Miku fairy image
@@ -356,7 +356,7 @@ function flapMiku() {
   if (!l3Active) return;
   if (!flappyRunning) { startFlappy(); }
   if (flappyPaused || !fairy.alive) return;
-  fairy.vy = FLAP_FORCE;
+  fairy.vy = FLAP_FORCE; // flap is instant velocity, no dt needed
 }
 
 function spawnLeek(now) {
@@ -373,6 +373,9 @@ function flappyLoop(now) {
 
   const W = flappyCanvas.width;
   const H = flappyCanvas.height;
+  // Delta time normalised to 60fps so speed is frame-rate independent
+  const dt = Math.min((now - (flappyLoop._last || now)) / 16.67, 3);
+  flappyLoop._last = now;
 
   // Spawn bonus rings every 5 seconds
   if (now - lastRingTime > RING_INTERVAL) {
@@ -388,7 +391,7 @@ function flappyLoop(now) {
   }
 
   // Move rings
-  for (const rg of rings) { rg.x -= LEEK_SPEED * 0.8; rg.pulse += 0.15; }
+  for (const rg of rings) { rg.x -= LEEK_SPEED * 0.8 * dt; rg.pulse += 0.15 * dt; }
   rings = rings.filter(rg => rg.x > -80 && !rg.collected);
 
   // Ring collision
@@ -421,7 +424,7 @@ function flappyLoop(now) {
   }
 
   // Move evil stars
-  evilStars3.forEach(s => s.x -= s.fast ? LEEK_SPEED * 1.4 : LEEK_SPEED * 0.9);
+  evilStars3.forEach(s => s.x -= (s.fast ? LEEK_SPEED * 1.4 : LEEK_SPEED * 0.9) * dt);
   evilStars3 = evilStars3.filter(s => s.x > -60 && !s.hit);
   evilStarRot3 += 0.05;
 
@@ -448,11 +451,11 @@ function flappyLoop(now) {
   }
 
   // Physics
-  fairy.vy += GRAVITY;
-  fairy.y  += fairy.vy;
+  fairy.vy += GRAVITY * dt;
+  fairy.y  += fairy.vy * dt;
 
   // Move leeks
-  for (const lk of leeks) lk.x -= LEEK_SPEED;
+  for (const lk of leeks) lk.x -= LEEK_SPEED * dt;
   leeks = leeks.filter(lk => lk.x > -80);
 
   // Score leeks passed
