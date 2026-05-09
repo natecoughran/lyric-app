@@ -309,6 +309,7 @@ let lastLeekTime  = 0;
 // Miku fairy image
 const mikuFairyImg = new Image();
 mikuFairyImg.src = 'miku_fairy.png';
+mikuFairyImg.onload = () => { if (currentLevel === 3 && !flappyRunning) drawFlappy(); };
 
 let fairy = { x:0, y:0, vy:0, w:70, h:70, alive:true };
 let leeks = [];
@@ -751,6 +752,7 @@ const LEEK4_SPEED = 6.0;
 
 const mikuPacImg = new Image();
 mikuPacImg.src = 'miku_pac.png';
+mikuPacImg.onload = () => { if (currentLevel === 4) drawPac(); };
 
 let pac = { x:0, y:0, vy:0, w:110, h:110, targetY:0, targetX:0 };
 let notes4  = [];
@@ -830,10 +832,14 @@ function pacLoop(now) {
   const W = pacCanvas.width;
   const H = pacCanvas.height;
 
+  // Delta time normalised to 60fps
+  const dt = Math.min((now - (pacLoop._last || now)) / 16.67, 3);
+  pacLoop._last = now;
+
   // Smooth movement toward target (both axes)
-  pac.y += (pac.targetY - pac.y) * 0.18;
-  pac.x += (pac.targetX - pac.x) * 0.18;
-  starRotation += 0.06; // spin speed
+  pac.y += (pac.targetY - pac.y) * 0.18 * dt;
+  pac.x += (pac.targetX - pac.x) * 0.18 * dt;
+  starRotation += 0.06 * dt; // spin speed
 
   // Spawn magnet power-up
   if (now - lastMagnet4Time > MAGNET_INTERVAL) {
@@ -845,7 +851,7 @@ function pacLoop(now) {
   }
 
   // Move magnets
-  magnets4.forEach(m => m.x -= NOTE_SPEED);
+  magnets4.forEach(m => m.x -= NOTE_SPEED * dt);
   magnets4 = magnets4.filter(m => m.x > -40 && !m.collected);
 
   // Magnet collision
@@ -927,8 +933,8 @@ function pacLoop(now) {
   }
 
   // Move notes & leeks
-  notes4.forEach(n => n.x -= NOTE_SPEED);
-  leeks4.forEach(l => l.x -= l.fast ? LEEK4_SPEED * 1.7 : LEEK4_SPEED);
+  notes4.forEach(n => n.x -= NOTE_SPEED * dt);
+  leeks4.forEach(l => l.x -= (l.fast ? LEEK4_SPEED * 1.7 : LEEK4_SPEED) * dt);
   notes4 = notes4.filter(n => n.x > -40);
   leeks4 = leeks4.filter(l => l.x > -60);
 
@@ -996,8 +1002,6 @@ function drawPac() {
     pacCtx.save();
     pacCtx.font = `bold ${n.r * 2}px serif`;
     pacCtx.fillStyle = n.color;
-    pacCtx.shadowColor = n.color;
-    pacCtx.shadowBlur = 12;
     pacCtx.textAlign = 'center';
     pacCtx.textBaseline = 'middle';
     pacCtx.fillText(n.symbol, n.x, n.y);
@@ -1010,8 +1014,6 @@ function drawPac() {
     const pulse = Math.sin(now * 0.006) * 3;
     pacCtx.strokeStyle = '#00BFFF';
     pacCtx.lineWidth = 4;
-    pacCtx.shadowColor = '#00BFFF';
-    pacCtx.shadowBlur = 18 + pulse;
     pacCtx.beginPath();
     pacCtx.arc(mg.x, mg.y, mg.r + pulse * 0.4, 0, Math.PI * 2);
     pacCtx.stroke();
@@ -1053,8 +1055,7 @@ function drawPac() {
     pacCtx.rotate(rot);
 
     // Dark outer glow
-    pacCtx.shadowColor = lk.fast ? '#ff2244' : '#6600cc';
-    pacCtx.shadowBlur  = 18;
+
 
     // Star body
     pacCtx.beginPath();
@@ -1097,8 +1098,7 @@ function drawPac() {
   if (mikuPacImg.complete && mikuPacImg.naturalWidth > 0) {
     pacCtx.save();
     // Slight bob animation
-    const bob = Math.sin(performance.now() * 0.006) * 3;
-    pacCtx.drawImage(mikuPacImg, pac.x, pac.y + bob, pac.w, pac.h);
+    pacCtx.drawImage(mikuPacImg, pac.x, pac.y, pac.w, pac.h);
     pacCtx.restore();
   } else {
     pacCtx.fillStyle = '#39C5BB';
