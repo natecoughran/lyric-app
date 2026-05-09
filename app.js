@@ -1,5 +1,5 @@
 // ============================================
-//   Green Lights Serenade / Hatsune Miku
+//   The Last March on Earth / Natsuyama Yotsugi × Dopam!ne
 // ============================================
 
 // ── DOM refs ──
