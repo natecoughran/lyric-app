@@ -505,16 +505,7 @@ function drawFlappy() {
   const H = flappyCanvas.height;
   flappyCtx.clearRect(0, 0, W, H);
 
-  // Soft pastel scrolling background layers
-  // Sky gradient bands
-  const skyColors = ['#fce4f0','#ede0ff','#ddf4ff'];
-  const bandH = H / skyColors.length;
-  skyColors.forEach((c, i) => {
-    flappyCtx.fillStyle = c;
-    flappyCtx.globalAlpha = 0.35;
-    flappyCtx.fillRect(0, i * bandH, W, bandH);
-  });
-  flappyCtx.globalAlpha = 1;
+  // Background handled by CSS -- skip canvas repaint of bg
 
   // Draw bonus rings
   for (const rg of rings) {
@@ -549,8 +540,6 @@ function drawFlappy() {
     flappyCtx.save();
     flappyCtx.translate(s.x, s.y);
     flappyCtx.rotate(rot);
-    flappyCtx.shadowColor = s.fast ? '#ff2244' : '#9933ff';
-    flappyCtx.shadowBlur = 14;
     // 5-pointed star
     flappyCtx.beginPath();
     for (let i = 0; i < 10; i++) {
@@ -669,24 +658,21 @@ function drawMic(cx, topY, bottomY, flipped) {
   flappyCtx.ellipse(cx, headY, headR, headR + 6, 0, 0, Math.PI * 2);
   flappyCtx.fill(); flappyCtx.stroke();
 
-  // Mesh dots on head
-  flappyCtx.fillStyle = 'rgba(57,197,187,0.35)';
+  // Mesh: simple cross lines instead of many arcs
+  flappyCtx.strokeStyle = 'rgba(57,197,187,0.3)';
+  flappyCtx.lineWidth = 1;
   for (let row = -2; row <= 2; row++) {
-    for (let col = -2; col <= 2; col++) {
-      const dx = col * 6, dy = row * 6;
-      if (dx*dx/(headR*headR) + dy*dy/((headR+6)*(headR+6)) <= 0.85) {
-        flappyCtx.beginPath();
-        flappyCtx.arc(cx + dx, headY + dy, 1.5, 0, Math.PI * 2);
-        flappyCtx.fill();
-      }
-    }
+    flappyCtx.beginPath();
+    flappyCtx.moveTo(cx - headR + 4, headY + row * 6);
+    flappyCtx.lineTo(cx + headR - 4, headY + row * 6);
+    flappyCtx.stroke();
   }
 
-  // Teal glow ring around head
-  flappyCtx.strokeStyle = 'rgba(57,197,187,0.4)';
-  flappyCtx.lineWidth   = 4;
+  // Teal glow ring around head (no shadowBlur -- expensive)
+  flappyCtx.strokeStyle = 'rgba(57,197,187,0.5)';
+  flappyCtx.lineWidth   = 3;
   flappyCtx.beginPath();
-  flappyCtx.ellipse(cx, headY, headR + 5, headR + 11, 0, 0, Math.PI * 2);
+  flappyCtx.ellipse(cx, headY, headR + 4, headR + 10, 0, 0, Math.PI * 2);
   flappyCtx.stroke();
 
   // Small teal band on stick (Miku headset style)
@@ -1628,8 +1614,7 @@ function updateParticles() {
   for (const p of particles) {
     ctx.save();
     ctx.globalAlpha = p.opacity;
-    ctx.fillStyle = ctx.shadowColor = p.color;
-    ctx.shadowBlur = 8;
+    ctx.fillStyle = p.color;
     ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
     ctx.restore();
     p.x += p.speedX; p.y += p.speedY; p.opacity -= p.fade;
@@ -1721,7 +1706,7 @@ player.addListener({
         }
       }
     }
-    if (Math.random() < 0.04) spawnParticle(false);
+    if (currentLevel !== 3 && currentLevel !== 4 && Math.random() < 0.04) spawnParticle(false);
 
 
     const beat = player.findBeat(position);
