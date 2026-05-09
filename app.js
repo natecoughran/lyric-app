@@ -217,7 +217,7 @@ function whackClick(idx) {
     whackBonus += WHACK_HIT_PTS;
     addScore(WHACK_HIT_PTS);
     playPopSound();
-    for (let i = 0; i < 8; i++) spawnParticleAt(
+    for (let i = 0; i < 5; i++) spawnParticleAt(
       Math.random() * window.innerWidth,
       Math.random() * window.innerHeight, true
     );
@@ -1410,7 +1410,7 @@ function collectStar(levelStars, idx, label) {
   document.body.appendChild(pop);
   pop.addEventListener('animationend', () => pop.remove());
   playPopSound();
-  for (let i = 0; i < 12; i++) spawnParticleAt(Math.random()*window.innerWidth, Math.random()*window.innerHeight, true);
+  for (let i = 0; i < 6; i++) spawnParticleAt(Math.random()*window.innerWidth, Math.random()*window.innerHeight, true);
 }
 
 function buildStarSummary() {
@@ -1603,7 +1603,7 @@ function spawnParticleAt(x, y, energized) {
   const colors = currentLevel === 2
     ? ['#00BFFF','#cc66ff','#ffffff','#88ccff','#ddaaff']
     : ['#39C5BB','#FF69B4','#00FFFF','#00ff88','#ffffff'];
-  for (let i = 0; i < (energized ? 3 : 1); i++) {
+  for (let i = 0; i < (energized ? 2 : 1); i++) {
     particles.push({
       x, y,
       size:    Math.random() * (energized ? 6 : 3) + 1,
@@ -1621,6 +1621,7 @@ function spawnParticle(e) { spawnParticleAt(Math.random()*canvas.width, Math.ran
 function updateParticles() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   particles = particles.filter(p => p.opacity > 0);
+  if (particles.length > 80) particles.splice(0, particles.length - 80);
   for (const p of particles) {
     ctx.save();
     ctx.globalAlpha = p.opacity;
@@ -1683,40 +1684,41 @@ player.addListener({
   },
 
   onTimeUpdate(position) {
+    const now = performance.now();
     const len = player.data?.song?.length;
-    if (len) {
-      const pct = (position / len * 100) + '%';
-      if (currentLevel === 1) {
-        seekFill.style.width  = pct;
-        timeDisplay.textContent = formatTime(position) + ' / ' + formatTime(len);
-      } else if (currentLevel === 2) {
-        seekFill2.style.width = pct;
-        timeDisplay2.textContent = formatTime(position) + ' / ' + formatTime(len);
-      } else if (currentLevel === 3) {
-        seekFill3.style.width = pct;
-        timeDisplay3.textContent = formatTime(position) + ' / ' + formatTime(len);
-      } else if (currentLevel === 4) {
-        seekFill4.style.width = pct;
-        timeDisplay4.textContent = formatTime(position) + ' / ' + formatTime(len);
+    // Throttle heavy DOM work to every 50ms
+    if (!onTimeUpdate._last || now - onTimeUpdate._last > 50) {
+      onTimeUpdate._last = now;
+      if (len) {
+        const pct = (position / len * 100) + '%';
+        if (currentLevel === 1) {
+          seekFill.style.width  = pct;
+          timeDisplay.textContent = formatTime(position) + ' / ' + formatTime(len);
+        } else if (currentLevel === 2) {
+          seekFill2.style.width = pct;
+          timeDisplay2.textContent = formatTime(position) + ' / ' + formatTime(len);
+        } else if (currentLevel === 3) {
+          seekFill3.style.width = pct;
+          timeDisplay3.textContent = formatTime(position) + ' / ' + formatTime(len);
+        } else if (currentLevel === 4) {
+          seekFill4.style.width = pct;
+          timeDisplay4.textContent = formatTime(position) + ' / ' + formatTime(len);
+        }
+      }
+      // Level transition timers -- only check every 50ms
+      if (currentLevel === 2 && l2StartTime && (now - l2StartTime) >= 30000) {
+        l2StartTime = null; goToLevel3();
+      }
+      if (currentLevel === 3 && l3StartTime && (now - l3StartTime) >= 30000) {
+        l3StartTime = null; goToLevel4();
+      }
+      if (currentLevel === 4 && l4StartTime && (now - l4StartTime) >= 30000) {
+        l4StartTime = null; goToEndScreen();
       }
     }
-    if (Math.random() < 0.08) spawnParticle(false);
+    if (Math.random() < 0.04) spawnParticle(false);
 
-    // Level 2 runs for 30 seconds then transitions to Level 3
-    if (currentLevel === 2 && l2StartTime && (performance.now() - l2StartTime) >= 30000) {
-      l2StartTime = null;
-      goToLevel3();
-    }
-    // Level 3 runs for 30 seconds then transitions to Level 4
-    if (currentLevel === 3 && l3StartTime && (performance.now() - l3StartTime) >= 30000) {
-      l3StartTime = null;
-      goToLevel4();
-    }
-    // Level 4 runs for 30 seconds then goes to end screen
-    if (currentLevel === 4 && l4StartTime && (performance.now() - l4StartTime) >= 30000) {
-      l4StartTime = null;
-      goToEndScreen();
-    }
+    // Level timers handled in throttled block above
     const beat = player.findBeat(position);
     if (beat && Math.abs(position - beat.startTime) < 30) {
       beatFlash.className = '';
