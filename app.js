@@ -286,8 +286,10 @@ let arrowTimerAnimHandle = null;
 let l2Active        = false;
 let l2StartTime     = null;
 let l2FeverMode     = false;
-let doubleArrow     = null;  // second arrow in a sequence
-let doubleArrowHit  = false; // whether first was hit
+let doubleArrow     = null;
+let doubleArrowHit  = false;
+let arrowTimerStart = 0;
+let arrowTimerActive = false;
 
 // ══════════════════════════════════
 //   LEVEL 3 — FLAPPY MIKU
@@ -309,7 +311,6 @@ let lastLeekTime  = 0;
 // Miku fairy image
 const mikuFairyImg = new Image();
 mikuFairyImg.src = 'miku_fairy.png';
-mikuFairyImg.onload = () => { if (currentLevel === 3 && !flappyRunning) drawFlappy(); };
 
 let fairy = { x:0, y:0, vy:0, w:70, h:70, alive:true };
 let leeks = [];
@@ -575,12 +576,8 @@ function drawFlappy() {
     flappyCtx.save();
     if (!fairy.alive) { flappyCtx.globalAlpha = 0.5; flappyCtx.rotate(0.4); }
     // Tilt based on velocity
-    flappyCtx.save();
-    flappyCtx.translate(fairy.x + fairy.w/2, fairy.y + fairy.h/2);
-    const tilt = Math.max(-0.4, Math.min(0.5, fairy.vy * 0.045));
-    flappyCtx.rotate(tilt);
-    flappyCtx.drawImage(mikuFairyImg, -fairy.w/2, -fairy.h/2, fairy.w, fairy.h);
-    flappyCtx.restore();
+    // Simple draw without rotate for performance
+    flappyCtx.drawImage(mikuFairyImg, fairy.x, fairy.y, fairy.w, fairy.h);
     if (!fairy.alive) flappyCtx.restore();
   } else {
     // Fallback circle if image not loaded
@@ -752,7 +749,13 @@ const LEEK4_SPEED = 6.0;
 
 const mikuPacImg = new Image();
 mikuPacImg.src = 'miku_pac.png';
-mikuPacImg.onload = () => { if (currentLevel === 4) drawPac(); };
+// Preload -- keep retrying draw until loaded
+const _waitPac = setInterval(() => {
+  if (mikuPacImg.complete && mikuPacImg.naturalWidth > 0) {
+    clearInterval(_waitPac);
+    if (currentLevel === 4) drawPac();
+  }
+}, 200);
 
 let pac = { x:0, y:0, vy:0, w:110, h:110, targetY:0, targetX:0 };
 let notes4  = [];
@@ -1229,15 +1232,11 @@ function showNextArrow() {
   }
   arrowTarget.className = '';
 
-  // Animate timer bar draining
-  requestAnimationFrame(() => {
-    arrowTimerBar.style.transition = 'none';
-    arrowTimerBar.style.transform  = 'scaleX(1)';
-    requestAnimationFrame(() => {
-      arrowTimerBar.style.transition = `transform ${arrowWindow}ms linear`;
-      arrowTimerBar.style.transform  = 'scaleX(0)';
-    });
-  });
+  // JS-driven timer bar -- no CSS transitions
+  arrowTimerBar.style.transition = 'none';
+  arrowTimerBar.style.transform  = 'scaleX(1)';
+  arrowTimerStart  = performance.now();
+  arrowTimerActive = true;
 
   // Miss if not hit in time
   clearTimeout(arrowTimerHandle);
@@ -1268,6 +1267,8 @@ function registerHit(key) {
   }
   const elapsed = performance.now() - arrowShownAt;
   clearTimeout(arrowTimerHandle);
+  arrowTimerActive = false;
+  arrowTimerBar.style.transform = 'scaleX(0)';
   const wasDouble = doubleArrow !== null;
   doubleArrow = null;
   doubleArrowHit = false;
@@ -1308,8 +1309,8 @@ function registerMiss() {
   if (!l2Active) return;
   currentArrow = null;
   clearTimeout(arrowTimerHandle);
-  arrowTimerBar.style.transition = 'none';
-  arrowTimerBar.style.transform  = 'scaleX(0)';
+  arrowTimerActive = false;
+  arrowTimerBar.style.transform = 'scaleX(0)';
   showRating('MISS ✗', 'miss');
   arrowTarget.classList.add('hit-miss');
   l2Miku.classList.add('hit-miss');
@@ -1886,5 +1887,15 @@ function goToEndScreen() {
   }, 3000);
 }
 
-function loop() { updateParticles(); requestAnimationFrame(loop); }
+function loop() {
+  updateParticles();
+  // JS-driven arrow timer bar
+  if (arrowTimerActive) {
+    const elapsed = performance.now() - arrowTimerStart;
+    const pct = Math.max(0, 1 - elapsed / arrowWindow);
+    arrowTimerBar.style.transform = `scaleX(${pct})`;
+    if (pct <= 0) arrowTimerActive = false;
+  }
+  requestAnimationFrame(loop);
+}
 loop();
