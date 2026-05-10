@@ -280,7 +280,7 @@ const ARROW_TO_KEY = { '↑':'ArrowUp','↓':'ArrowDown','←':'ArrowLeft','→'
 
 let currentArrow    = null;
 let arrowShownAt    = null;
-let arrowWindow     = 1000; // ms to hit the arrow
+let arrowWindow     = 1600; // ms to hit the arrow
 let arrowTimerHandle = null;
 let arrowTimerAnimHandle = null;
 let l2Active        = false;
@@ -1097,18 +1097,14 @@ function drawPac() {
     pacCtx.restore();
   }
 
-  // Draw Miku pac
-  if (mikuPacImg.complete && mikuPacImg.naturalWidth > 0) {
-    pacCtx.save();
-    // Slight bob animation
+  // Draw Miku pac -- teal circle always visible, image on top when loaded
+  pacCtx.fillStyle = '#39C5BB';
+  pacCtx.beginPath();
+  pacCtx.arc(pac.x + pac.w/2, pac.y + pac.h/2, pac.w * 0.45, 0, Math.PI*2);
+  pacCtx.fill();
+  try {
     pacCtx.drawImage(mikuPacImg, pac.x, pac.y, pac.w, pac.h);
-    pacCtx.restore();
-  } else {
-    pacCtx.fillStyle = '#39C5BB';
-    pacCtx.beginPath();
-    pacCtx.arc(pac.x + pac.w/2, pac.y + pac.h/2, 30, 0, Math.PI*2);
-    pacCtx.fill();
-  }
+  } catch(e) {}
 
   // Floor & ceiling lines
   pacCtx.strokeStyle = 'rgba(57,197,187,0.15)';
