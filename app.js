@@ -310,6 +310,9 @@ let lastLeekTime  = 0;
 
 // Miku fairy image
 const mikuFairyImg = new Image();
+let mikuFairyLoaded = false;
+mikuFairyImg.onload  = () => { mikuFairyLoaded = true; };
+mikuFairyImg.onerror = () => { console.warn('miku_fairy.png failed to load'); };
 mikuFairyImg.src = 'miku_fairy.png';
 
 let fairy = { x:0, y:0, vy:0, w:70, h:70, alive:true };
@@ -572,12 +575,17 @@ function drawFlappy() {
   }
 
   // Draw fairy Miku
-  if (mikuFairyImg.complete) {
-    flappyCtx.save();
-    if (!fairy.alive) { flappyCtx.globalAlpha = 0.5; flappyCtx.rotate(0.4); }
-    // Tilt based on velocity
-    // Simple draw without rotate for performance
-    flappyCtx.drawImage(mikuFairyImg, fairy.x, fairy.y, fairy.w, fairy.h);
+  flappyCtx.save();
+  if (!fairy.alive) { flappyCtx.globalAlpha = 0.5; }
+  if (true) {
+    if (mikuFairyLoaded) {
+      flappyCtx.drawImage(mikuFairyImg, Math.round(fairy.x), Math.round(fairy.y), fairy.w, fairy.h);
+    } else {
+      flappyCtx.fillStyle = '#FF69B4';
+      flappyCtx.beginPath();
+      flappyCtx.arc(fairy.x + fairy.w/2, fairy.y + fairy.h/2, fairy.w/2, 0, Math.PI*2);
+      flappyCtx.fill();
+    }
     if (!fairy.alive) flappyCtx.restore();
   } else {
     // Fallback circle if image not loaded
@@ -748,14 +756,10 @@ const NOTE_SPEED  = 4.5;
 const LEEK4_SPEED = 6.0;
 
 const mikuPacImg = new Image();
+let mikuPacLoaded = false;
+mikuPacImg.onload  = () => { mikuPacLoaded = true; };
+mikuPacImg.onerror = () => { console.warn('miku_pac.png failed to load'); };
 mikuPacImg.src = 'miku_pac.png';
-// Preload -- keep retrying draw until loaded
-const _waitPac = setInterval(() => {
-  if (mikuPacImg.complete && mikuPacImg.naturalWidth > 0) {
-    clearInterval(_waitPac);
-    if (currentLevel === 4) drawPac();
-  }
-}, 200);
 
 let pac = { x:0, y:0, vy:0, w:110, h:110, targetY:0, targetX:0 };
 let notes4  = [];
@@ -1097,14 +1101,16 @@ function drawPac() {
     pacCtx.restore();
   }
 
-  // Draw Miku pac -- teal circle always visible, image on top when loaded
-  pacCtx.fillStyle = '#39C5BB';
-  pacCtx.beginPath();
-  pacCtx.arc(pac.x + pac.w/2, pac.y + pac.h/2, pac.w * 0.45, 0, Math.PI*2);
-  pacCtx.fill();
-  try {
-    pacCtx.drawImage(mikuPacImg, pac.x, pac.y, pac.w, pac.h);
-  } catch(e) {}
+  // Draw Miku pac
+  if (mikuPacLoaded) {
+    pacCtx.drawImage(mikuPacImg, Math.round(pac.x), Math.round(pac.y), pac.w, pac.h);
+  } else {
+    // Fallback teal circle
+    pacCtx.fillStyle = '#39C5BB';
+    pacCtx.beginPath();
+    pacCtx.arc(pac.x + pac.w/2, pac.y + pac.h/2, pac.w * 0.45, 0, Math.PI*2);
+    pacCtx.fill();
+  }
 
   // Floor & ceiling lines
   pacCtx.strokeStyle = 'rgba(57,197,187,0.15)';
