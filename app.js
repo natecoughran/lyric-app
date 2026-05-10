@@ -2,6 +2,13 @@
 //   The Last March on Earth / Natsuyama Yotsugi × Dopam!ne
 // ============================================
 
+// ── Preload all images immediately ──
+const _imgPac   = new Image(); _imgPac.src   = 'miku_pac.png';
+const _imgFairy = new Image(); _imgFairy.src = 'miku_fairy.png';
+const _imgAlien = new Image(); _imgAlien.src = 'miku_alien.png';
+const _imgJack  = new Image(); _imgJack.src  = 'miku_jack.png';
+const _imgMiku  = new Image(); _imgMiku.src  = 'miku_image.png';
+
 // ── DOM refs ──
 const bgEl           = document.getElementById('bg');
 const introScreen    = document.getElementById('intro-screen');
@@ -309,11 +316,11 @@ const LEEK_INTERVAL = 2800; // ms between leeks -- wider spacing
 let lastLeekTime  = 0;
 
 // Miku fairy image
-const mikuFairyImg = new Image();
+const mikuFairyImg = _imgFairy;
 let mikuFairyLoaded = false;
 mikuFairyImg.onload  = () => { mikuFairyLoaded = true; };
 mikuFairyImg.onerror = () => { console.warn('miku_fairy.png failed to load'); };
-mikuFairyImg.src = 'miku_fairy.png';
+if (mikuFairyImg.complete && mikuFairyImg.naturalWidth > 0) mikuFairyLoaded = true;
 
 let fairy = { x:0, y:0, vy:0, w:70, h:70, alive:true };
 let leeks = [];
@@ -755,11 +762,12 @@ const PAC_SPEED   = 3.8;
 const NOTE_SPEED  = 4.5;
 const LEEK4_SPEED = 6.0;
 
-const mikuPacImg = new Image();
+const mikuPacImg = _imgPac;
 let mikuPacLoaded = false;
 mikuPacImg.onload  = () => { mikuPacLoaded = true; };
 mikuPacImg.onerror = () => { console.warn('miku_pac.png failed to load'); };
-mikuPacImg.src = 'miku_pac.png';
+// If already loaded (cached), set flag immediately
+if (mikuPacImg.complete && mikuPacImg.naturalWidth > 0) mikuPacLoaded = true;
 
 let pac = { x:0, y:0, vy:0, w:110, h:110, targetY:0, targetX:0 };
 let notes4  = [];
@@ -779,8 +787,10 @@ const MAGNET_DURATION = 3000;
 const PAC_STEP = 6; // pixels per key press
 
 function initPac() {
+  pacCanvas.width  = window.innerWidth;
+  pacCanvas.height = window.innerHeight;
   pac.x = 110;
-  pac.y = pacCanvas.height * 0.5;
+  pac.y = window.innerHeight * 0.5;
   pac.targetY = pac.y;
   pac.targetX = 110;
   notes4  = [];
